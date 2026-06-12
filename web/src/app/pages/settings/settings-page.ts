@@ -30,6 +30,16 @@ import { MeasurementsApi } from '../../services/measurements-api';
       </label>
 
       <label>
+        Height (cm)
+        <input
+          type="number" min="0" step="0.5" inputmode="decimal"
+          placeholder="for body-fat estimate"
+          [value]="heightCm()"
+          (input)="heightCm.set($any($event.target).value)"
+        />
+      </label>
+
+      <label>
         Default rest between sets (seconds)
         <input
           type="number" min="0" step="15"
@@ -58,6 +68,7 @@ export class SettingsPage {
 
   readonly sex = signal('');
   readonly birthDate = signal('');
+  readonly heightCm = signal('');
   readonly restSeconds = signal('120');
   readonly saved = signal(false);
 
@@ -74,6 +85,7 @@ export class SettingsPage {
         this.populated = true;
         this.sex.set(p.sex ?? '');
         this.birthDate.set(p.birthDate ? p.birthDate.slice(0, 10) : '');
+        this.heightCm.set(p.heightCm != null ? String(p.heightCm) : '');
         this.restSeconds.set(String(p.defaultRestSeconds));
       }
     });
@@ -85,6 +97,7 @@ export class SettingsPage {
       .updateProfile({
         sex: (this.sex() || null) as 'male' | 'female' | null,
         birthDate: this.birthDate() || null,
+        heightCm: this.heightCm() ? Number(this.heightCm()) : null,
         defaultRestSeconds: Number(this.restSeconds()) || 120,
       })
       .subscribe(() => {

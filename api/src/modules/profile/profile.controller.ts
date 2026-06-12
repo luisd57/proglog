@@ -5,6 +5,7 @@ interface ProfileInput {
   sex?: 'male' | 'female' | null;
   birthDate?: string | null;
   defaultRestSeconds?: number;
+  heightCm?: number | null;
 }
 
 @Controller('profile')
@@ -32,12 +33,14 @@ export class ProfileController {
         ...(input.defaultRestSeconds !== undefined && {
           defaultRestSeconds: input.defaultRestSeconds,
         }),
+        ...(input.heightCm !== undefined && { heightCm: input.heightCm }),
       },
       create: {
         id: 1,
         sex: input.sex ?? null,
         birthDate: input.birthDate ? new Date(input.birthDate) : null,
         defaultRestSeconds: input.defaultRestSeconds ?? 120,
+        heightCm: input.heightCm ?? null,
       },
     });
   }

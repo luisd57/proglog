@@ -57,6 +57,8 @@ Development is TDD: nontrivial logic (stats, PR detection, strength levels) is w
 - [x] Phase 7: Measurements — measurements module (TDD: 4 tests; 15 fixed types, latest-weight feeds strength levels), profile module (GET/PATCH, single row id=1), measurements page (entry + chart + list), settings page (sex/birth date/default rest).
 - [x] Phase 8: Dashboard, weekly recap, PWA — `/api/stats/weekly-muscles` (finished sessions, last 7 days, working sets only; TDD: 2 tests), dashboard home (quick-start buttons, weekly diagram, recent sessions), @angular/pwa (service worker prod-only, manifest themed). PWA install: open the served app in Safari → Add to Home Screen.
 
-All 8 phases complete (2026-06-12). Suites: 56 API unit + 6 API e2e (Jest), 38 web (Vitest).
+All 8 phases complete (2026-06-12). Suites: 56 API unit + 6 API e2e (Jest), 49 web (Vitest).
 
 Post-release fixes: date inputs must commit on `(change)`, never `(input)` — partial dates report `value=""` and the `[value]` write-back wipes the user's typing. Measurements entry is one form for all 15 types (`GET /api/measurements/latest` feeds placeholders; only filled fields POST).
+
+Body-fat estimate: US Navy method in `web/src/app/utils/body-fat.ts` (needs sex + height from profile, neck + waist, and hips for women). Height is `Profile.heightCm` (added in settings). The measurements page shows a live readout (typed girths override latest saved) with a "Log it" button that writes a `bodyfat` entry. NOTE: after a Prisma schema change, regenerate the client in the *running* dev api container (`docker compose -f docker-compose.dev.yml exec api npx prisma generate` then restart) — `run --rm` migrations don't touch the up container's node_modules volume.

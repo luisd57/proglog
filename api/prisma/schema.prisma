@@ -93,4 +93,5 @@ model Profile {
   sex                String? // male | female
   birthDate          DateTime?
   defaultRestSeconds Int       @default(120)
+  heightCm           Float?
 }

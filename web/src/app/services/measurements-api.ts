@@ -14,6 +14,7 @@ export interface Profile {
   sex: 'male' | 'female' | null;
   birthDate: string | null;
   defaultRestSeconds: number;
+  heightCm: number | null;
 }
 
 export const MEASUREMENT_LABELS: Record<string, string> = {

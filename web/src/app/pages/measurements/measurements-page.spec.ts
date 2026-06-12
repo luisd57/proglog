@@ -4,22 +4,47 @@ import {
   provideHttpClientTesting,
 } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { MeasurementsPage } from './measurements-page';
 
 describe('MeasurementsPage', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+      ],
     });
   });
 
-  async function create() {
+  interface ProfileShape {
+    id: number;
+    sex: 'male' | 'female' | null;
+    birthDate: string | null;
+    defaultRestSeconds: number;
+    heightCm: number | null;
+  }
+
+  const NO_PROFILE: ProfileShape = {
+    id: 1,
+    sex: null,
+    birthDate: null,
+    defaultRestSeconds: 120,
+    heightCm: null,
+  };
+
+  async function create(opts: {
+    latest?: Record<string, number>;
+    profile?: ProfileShape;
+  } = {}) {
     const fixture = TestBed.createComponent(MeasurementsPage);
     fixture.detectChanges();
     const http = TestBed.inject(HttpTestingController);
     http
       .expectOne('/api/measurements/latest')
-      .flush({ weight: 81.4, waist: 84 });
+      .flush(opts.latest ?? { weight: 81.4, waist: 84 });
+    http.expectOne('/api/profile').flush(opts.profile ?? NO_PROFILE);
     http.expectOne('/api/measurements?type=weight').flush([]);
     await fixture.whenStable();
     fixture.detectChanges();
@@ -72,5 +97,53 @@ describe('MeasurementsPage', () => {
     const { page, http } = await create();
     page.save(new Event('submit'));
     expect(http.match('/api/measurements').length).toBe(0);
+  });
+
+  it('estimates body fat from profile + latest girths and reacts to typed values', async () => {
+    const { page } = await create({
+      latest: { neck: 40, waist: 85 },
+      profile: {
+        id: 1,
+        sex: 'male',
+        birthDate: null,
+        defaultRestSeconds: 120,
+        heightCm: 180,
+      },
+    });
+
+    expect(page.estimatedBodyFat()).toBeCloseTo(14.5, 1);
+
+    // a freshly typed waist overrides the latest saved value
+    page.setField('waist', '95');
+    expect(page.estimatedBodyFat()!).toBeGreaterThan(14.5);
+  });
+
+  it('returns no estimate when height is missing', async () => {
+    const { page } = await create({ latest: { neck: 40, waist: 85 } });
+    expect(page.estimatedBodyFat()).toBeNull();
+  });
+
+  it('logs the estimate as a bodyfat measurement with the shared date', async () => {
+    const { page, http } = await create({
+      latest: { neck: 40, waist: 85 },
+      profile: {
+        id: 1,
+        sex: 'male',
+        birthDate: null,
+        defaultRestSeconds: 120,
+        heightCm: 180,
+      },
+    });
+    page.date.set('2026-06-12');
+    page.logEstimate();
+
+    const req = http.expectOne('/api/measurements');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({
+      type: 'bodyfat',
+      value: page.estimatedBodyFat(),
+      measuredAt: '2026-06-12',
+    });
+    req.flush({});
   });
 });

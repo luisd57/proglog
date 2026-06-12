@@ -1,17 +1,19 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { rxResource } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { ChartPoint, LineChart } from '../../components/line-chart/line-chart';
 import {
   MEASUREMENT_LABELS,
   MeasurementsApi,
 } from '../../services/measurements-api';
+import { estimateNavyBodyFat } from '../../utils/body-fat';
 
 @Component({
   selector: 'app-measurements-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [LineChart, DatePipe],
+  imports: [LineChart, DatePipe, RouterLink],
   template: `
     <header class="page-header">
       <h1>Measurements</h1>
@@ -49,6 +51,23 @@ import {
         <span class="count">Saved.</span>
       }
     </form>
+
+    <section class="bodyfat">
+      <h2>Estimated body fat</h2>
+      @if (estimatedBodyFat(); as bf) {
+        <div class="bf-readout">
+          <span class="bf-value">{{ bf }}%</span>
+          <span class="count">US Navy method, from your neck/waist@if (isFemale()){/hips} + height</span>
+          <button class="button" type="button" (click)="logEstimate()">Log it</button>
+        </div>
+      } @else {
+        <p class="count">
+          Set your <a routerLink="/settings">height and sex</a>, and enter
+          neck + waist@if (isFemale()){ + hips} (above or previously logged) to
+          estimate body fat.
+        </p>
+      }
+    </section>
 
     <h2>History</h2>
     <div class="filters">
@@ -96,6 +115,17 @@ import {
     }
     .field-grid input { width: 100%; }
     h2 { font-size: 1rem; margin: 1.5rem 0 0.5rem; }
+    .bf-readout {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .bf-value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
     .entries { list-style: none; padding: 0; margin: 0; }
     .entries li {
       display: flex;
@@ -127,6 +157,20 @@ export class MeasurementsPage {
   readonly type = signal('weight');
 
   readonly latest = rxResource({ stream: () => this.api.latestAll() });
+  readonly profile = rxResource({ stream: () => this.api.profile() });
+
+  readonly isFemale = computed(() => this.profile.value()?.sex === 'female');
+
+  readonly estimatedBodyFat = computed(() => {
+    const p = this.profile.value();
+    return estimateNavyBodyFat({
+      sex: p?.sex ?? null,
+      heightCm: p?.heightCm ?? null,
+      neckCm: this.effectiveValue('neck'),
+      waistCm: this.effectiveValue('waist'),
+      hipsCm: this.effectiveValue('hips'),
+    });
+  });
 
   readonly series = rxResource({
     params: () => this.type(),
@@ -150,6 +194,29 @@ export class MeasurementsPage {
   placeholderFor(type: string): string {
     const value = this.latest.value()?.[type];
     return value !== undefined ? String(value) : '—';
+  }
+
+  // value currently being typed (if valid) wins over the latest saved one,
+  // so the estimate updates live as the user enters new girths
+  private effectiveValue(type: string): number | null {
+    const typed = this.fields()[type];
+    if (typed !== undefined && typed !== '' && Number(typed) > 0) {
+      return Number(typed);
+    }
+    return this.latest.value()?.[type] ?? null;
+  }
+
+  logEstimate() {
+    const value = this.estimatedBodyFat();
+    if (value === null) return;
+    this.api
+      .add({ type: 'bodyfat', value, measuredAt: this.date() })
+      .subscribe(() => {
+        this.saved.set(true);
+        setTimeout(() => this.saved.set(false), 2000);
+        this.latest.reload();
+        this.series.reload();
+      });
   }
 
   setField(type: string, value: string) {
