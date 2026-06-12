@@ -12,4 +12,9 @@ export class StatsController {
   ) {
     return this.stats.exerciseBest(id, excludeSession);
   }
+
+  @Get('exercise/:id/series')
+  exerciseSeries(@Param('id') id: string) {
+    return this.stats.exerciseSeries(id);
+  }
 }

@@ -79,4 +79,54 @@ describe('StatsService.exerciseBest', () => {
     const best = await service.exerciseBest('ex-bench');
     expect(best).toEqual({ bestWeightKg: null, bestE1rm: null });
   });
+
+  describe('exerciseSeries', () => {
+    it('returns one point per finished session with top set, volume and e1RM', async () => {
+      await logFinishedSession([
+        { weightKg: 60, reps: 10, isWarmup: true },
+        { weightKg: 80, reps: 8 },
+        { weightKg: 80, reps: 6 },
+      ]);
+      await logFinishedSession([
+        { weightKg: 82.5, reps: 8 },
+      ]);
+
+      const series = await service.exerciseSeries('ex-bench');
+      expect(series.points).toHaveLength(2);
+
+      const [first, second] = series.points;
+      // warmup excluded from everything
+      expect(first.volume).toBe(80 * 8 + 80 * 6);
+      expect(first.topSet).toEqual({ weightKg: 80, reps: 8 });
+      expect(first.e1rm).toBeCloseTo(101.33, 2);
+      expect(second.volume).toBe(82.5 * 8);
+      expect(second.e1rm).toBeCloseTo(104.5, 2);
+      expect(new Date(first.date).getTime()).toBeLessThan(
+        new Date(second.date).getTime(),
+      );
+    });
+
+    it('skips sessions with only warmups and returns PR events chronologically', async () => {
+      await logFinishedSession([{ weightKg: 80, reps: 8 }]); // baseline = PR
+      await logFinishedSession([{ weightKg: 60, reps: 10, isWarmup: true }]);
+      await logFinishedSession([{ weightKg: 70, reps: 5 }]); // no PR
+      await logFinishedSession([{ weightKg: 85, reps: 8 }]); // weight + e1rm PR
+
+      const series = await service.exerciseSeries('ex-bench');
+      expect(series.points).toHaveLength(3);
+
+      expect(series.prs).toHaveLength(2);
+      expect(series.prs[0]).toEqual(
+        expect.objectContaining({ weightKg: 80, reps: 8 }),
+      );
+      expect(series.prs[1]).toEqual(
+        expect.objectContaining({ weightKg: 85, reps: 8 }),
+      );
+    });
+
+    it('returns empty series without history', async () => {
+      const series = await service.exerciseSeries('ex-bench');
+      expect(series).toEqual({ points: [], prs: [] });
+    });
+  });
 });

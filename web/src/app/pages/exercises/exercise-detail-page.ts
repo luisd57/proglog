@@ -1,14 +1,17 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
+import { ChartPoint, LineChart } from '../../components/line-chart/line-chart';
 import { MuscleDiagram } from '../../components/muscle-diagram/muscle-diagram';
 import { muscleHighlights } from '../../components/muscle-diagram/muscle-map';
 import { ExercisesApi } from '../../services/exercises-api';
+import { SeriesPoint, StatsApi } from '../../services/stats-api';
 
 @Component({
   selector: 'app-exercise-detail-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MuscleDiagram, RouterLink],
+  imports: [MuscleDiagram, RouterLink, LineChart, DatePipe, DecimalPipe],
   template: `
     <a routerLink="/exercises" class="back">← Exercises</a>
 
@@ -36,7 +39,30 @@ import { ExercisesApi } from '../../services/exercises-api';
               <span class="chip">{{ ex.category }}</span>
             }
           </p>
+          @if (series.value(); as s) {
+            @if (s.points.length > 0) {
+              <h2>Progress</h2>
+              <app-line-chart title="Estimated 1RM" unit="kg" [points]="e1rmPoints()" />
+              <app-line-chart title="Top set weight" unit="kg" [points]="topSetPoints()" />
+              <app-line-chart title="Volume per session" unit="kg" [points]="volumePoints()" />
+
+              <h2>Personal records</h2>
+              <table class="pr-table">
+                <tbody>
+                  @for (pr of s.prs.slice().reverse(); track pr.date) {
+                    <tr>
+                      <td>{{ pr.date | date: 'd MMM y' }}</td>
+                      <td>{{ pr.weightKg }} kg × {{ pr.reps }}</td>
+                      <td class="dim">e1RM {{ pr.e1rm | number: '1.0-1' }} kg</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+          }
+
           @if (ex.instructions) {
+            <h2>Instructions</h2>
             <ol class="instructions">
               @for (step of ex.instructions.split('\n'); track $index) {
                 <li>{{ step }}</li>
@@ -67,10 +93,21 @@ import { ExercisesApi } from '../../services/exercises-api';
         grid-template-columns: 1fr;
       }
     }
+    h2 { font-size: 1rem; margin: 1.5rem 0 0.75rem; }
     .instructions li {
       margin-bottom: 0.5rem;
       line-height: 1.5;
     }
+    .pr-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    .pr-table td {
+      padding: 0.4rem 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .dim { color: var(--text-dim); }
     .legend {
       display: flex;
       gap: 0.5rem;
@@ -84,6 +121,7 @@ import { ExercisesApi } from '../../services/exercises-api';
 })
 export class ExerciseDetailPage {
   private readonly api = inject(ExercisesApi);
+  private readonly statsApi = inject(StatsApi);
   private readonly router = inject(Router);
 
   readonly id = input.required<string>();
@@ -93,10 +131,30 @@ export class ExerciseDetailPage {
     stream: ({ params }) => this.api.get(params),
   });
 
+  readonly series = rxResource({
+    params: () => this.id(),
+    stream: ({ params }) => this.statsApi.exerciseSeries(params),
+  });
+
   readonly highlights = computed(() => {
     const ex = this.exercise.value();
     return ex ? muscleHighlights(ex.primaryMuscles, ex.secondaryMuscles) : {};
   });
+
+  readonly e1rmPoints = computed(() => this.toChart((p) => Math.round(p.e1rm * 10) / 10));
+  readonly topSetPoints = computed(() => this.toChart((p) => p.topSet.weightKg));
+  readonly volumePoints = computed(() => this.toChart((p) => p.volume));
+
+  private toChart(pick: (p: SeriesPoint) => number): ChartPoint[] {
+    const points = this.series.value()?.points ?? [];
+    return points.map((p) => ({
+      label: new Date(p.date).toLocaleDateString(undefined, {
+        day: 'numeric',
+        month: 'short',
+      }),
+      value: pick(p),
+    }));
+  }
 
   remove() {
     if (!confirm('Delete this custom exercise?')) return;
