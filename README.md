@@ -5,6 +5,9 @@ Personal strength training tracker — workout splits, session logging, progress
 ## Run
 
 ```sh
+# first time only: create + seed the database (873 exercises)
+docker compose -f docker-compose.dev.yml run --rm api sh -c "npx prisma migrate deploy && npx prisma db seed"
+
 # production: one container on http://localhost:8080
 docker compose up --build -d
 

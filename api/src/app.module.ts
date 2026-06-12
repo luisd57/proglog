@@ -4,6 +4,7 @@ import { existsSync } from 'fs';
 import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { ExercisesModule } from './modules/exercises/exercises.module';
 import { PrismaModule } from './prisma/prisma.module';
 
 // In the prod image the Angular build is copied to /app/public; in dev the
@@ -13,6 +14,7 @@ const clientDist = join(__dirname, '..', 'public');
 @Module({
   imports: [
     PrismaModule,
+    ExercisesModule,
     ...(existsSync(clientDist)
       ? [
           ServeStaticModule.forRoot({

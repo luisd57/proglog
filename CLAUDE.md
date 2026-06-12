@@ -49,7 +49,7 @@ Development is TDD: nontrivial logic (stats, PR detection, strength levels) is w
 ## Implementation Status
 
 - [x] Phase 1: Scaffold & plumbing — Nest+Angular scaffolds, Prisma schema + init migration, dev compose (hot reload) and prod single-container image both verified, test suites green in Docker.
-- [ ] Phase 2: Exercise DB seed + muscle diagram component
+- [x] Phase 2: Exercise DB seed + muscle diagram — 873 exercises seeded (seed runs via dev compose; prod image has no ts-node), exercises module with filters (TDD, 13 unit + 4 e2e tests), `MuscleDiagram` component with vendored MIT SVG data (`web/src/app/components/muscle-diagram/`), browser/detail/new pages. Note: web tests touching @angular/common/http must run via `ng test`, not raw `vitest` (AOT linker).
 - [ ] Phase 3: Workout templates
 - [ ] Phase 4: Session logging
 - [ ] Phase 5: Overload stats
