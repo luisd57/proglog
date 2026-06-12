@@ -1,0 +1,10 @@
+FROM node:24-alpine
+WORKDIR /app
+COPY package*.json ./
+COPY prisma ./prisma
+RUN npm ci
+# tsc's default fs.watch does not see file changes through a Windows bind
+# mount; polling does.
+ENV TSC_WATCHFILE=DynamicPriorityPolling
+ENV CHOKIDAR_USEPOLLING=true
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run start:dev"]

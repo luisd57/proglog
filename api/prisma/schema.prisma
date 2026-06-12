@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Exercise {
+  id               String  @id @default(cuid())
+  name             String  @unique
+  primaryMuscles   String // JSON array of muscle names
+  secondaryMuscles String // JSON array of muscle names
+  equipment        String?
+  category         String?
+  instructions     String?
+  isCustom         Boolean @default(false)
+
+  templateExercises TemplateExercise[]
+  sessionExercises  SessionExercise[]
+}
+
+model WorkoutTemplate {
+  id         String    @id @default(cuid())
+  name       String
+  sortOrder  Int       @default(0)
+  archivedAt DateTime?
+
+  exercises TemplateExercise[]
+  sessions  Session[]
+}
+
+model TemplateExercise {
+  id          String @id @default(cuid())
+  templateId  String
+  exerciseId  String
+  sortOrder   Int
+  targetSets  Int?
+  targetReps  Int?
+  restSeconds Int?
+
+  template WorkoutTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  exercise Exercise        @relation(fields: [exerciseId], references: [id])
+}
+
+model Session {
+  id         String    @id @default(cuid())
+  templateId String?
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+  notes      String?
+
+  template  WorkoutTemplate?  @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  exercises SessionExercise[]
+}
+
+model SessionExercise {
+  id         String  @id @default(cuid())
+  sessionId  String
+  exerciseId String
+  sortOrder  Int
+  notes      String?
+
+  session  Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  exercise Exercise @relation(fields: [exerciseId], references: [id])
+  sets     SetLog[]
+}
+
+model SetLog {
+  id                String  @id @default(cuid())
+  sessionExerciseId String
+  setNumber         Int
+  weightKg          Float
+  reps              Int
+  isWarmup          Boolean @default(false)
+  notes             String?
+
+  sessionExercise SessionExercise @relation(fields: [sessionExerciseId], references: [id], onDelete: Cascade)
+}
+
+model Measurement {
+  id         String   @id @default(cuid())
+  measuredAt DateTime @default(now())
+  // weight | bodyfat | neck | shoulders | chest | waist | hips |
+  // bicepL | bicepR | forearmL | forearmR | thighL | thighR | calfL | calfR
+  type       String
+  value      Float
+}
+
+model Profile {
+  id                 Int       @id @default(1)
+  sex                String? // male | female
+  birthDate          DateTime?
+  defaultRestSeconds Int       @default(120)
+}

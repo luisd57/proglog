@@ -1,0 +1,12 @@
+name: proglog
+
+services:
+  app:
+    build: .
+    ports:
+      - "8080:3000"
+    environment:
+      DATABASE_URL: file:/data/proglog.db
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
