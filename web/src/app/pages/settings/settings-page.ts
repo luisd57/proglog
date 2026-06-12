@@ -25,7 +25,7 @@ import { MeasurementsApi } from '../../services/measurements-api';
         <input
           type="date"
           [value]="birthDate()"
-          (input)="birthDate.set($any($event.target).value)"
+          (change)="birthDate.set($any($event.target).value)"
         />
       </label>
 

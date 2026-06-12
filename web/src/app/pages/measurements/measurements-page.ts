@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { rxResource } from '@angular/core/rxjs-interop';
+import { forkJoin } from 'rxjs';
 import { ChartPoint, LineChart } from '../../components/line-chart/line-chart';
 import {
   MEASUREMENT_LABELS,
@@ -16,6 +17,40 @@ import {
       <h1>Measurements</h1>
     </header>
 
+    <form class="entry-form" (submit)="save($event)">
+      <label class="date-field">
+        Date
+        <input
+          type="date"
+          [value]="date()"
+          (change)="date.set($any($event.target).value)"
+        />
+      </label>
+
+      <div class="field-grid">
+        @for (t of types; track t) {
+          <label>
+            {{ labels[t] }}
+            <input
+              type="number" step="0.1" min="0" inputmode="decimal"
+              [attr.data-type]="t"
+              [placeholder]="placeholderFor(t)"
+              [value]="fields()[t] ?? ''"
+              (input)="setField(t, $any($event.target).value)"
+            />
+          </label>
+        }
+      </div>
+
+      <button class="button" type="submit" [disabled]="!hasValues()">
+        Save filled fields
+      </button>
+      @if (saved()) {
+        <span class="count">Saved.</span>
+      }
+    </form>
+
+    <h2>History</h2>
     <div class="filters">
       <select [value]="type()" (change)="type.set($any($event.target).value)">
         @for (t of types; track t) {
@@ -23,20 +58,6 @@ import {
         }
       </select>
     </div>
-
-    <form class="entry" (submit)="add($event)">
-      <input
-        type="number" step="0.1" min="0" [placeholder]="labels[type()]"
-        [value]="value()"
-        (input)="value.set($any($event.target).value)"
-      />
-      <input
-        type="date"
-        [value]="date()"
-        (input)="date.set($any($event.target).value)"
-      />
-      <button class="button" type="submit" [disabled]="!value()">Add</button>
-    </form>
 
     @if (series.value(); as list) {
       @if (list.length > 1) {
@@ -57,12 +78,24 @@ import {
     }
   `,
   styles: `
-    .entry {
+    .entry-form {
+      background: var(--surface);
+      border-radius: 10px;
+      padding: 1rem;
       display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1.25rem;
+      flex-direction: column;
+      gap: 1rem;
+      align-items: flex-start;
     }
-    .entry input[type='number'] { flex: 1; }
+    .date-field { width: 11rem; }
+    .field-grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
+      gap: 0.75rem;
+    }
+    .field-grid input { width: 100%; }
+    h2 { font-size: 1rem; margin: 1.5rem 0 0.5rem; }
     .entries { list-style: none; padding: 0; margin: 0; }
     .entries li {
       display: flex;
@@ -88,14 +121,21 @@ export class MeasurementsPage {
   readonly labels = MEASUREMENT_LABELS;
   readonly types = Object.keys(MEASUREMENT_LABELS);
 
-  readonly type = signal('weight');
-  readonly value = signal('');
   readonly date = signal(new Date().toISOString().slice(0, 10));
+  readonly fields = signal<Record<string, string>>({});
+  readonly saved = signal(false);
+  readonly type = signal('weight');
+
+  readonly latest = rxResource({ stream: () => this.api.latestAll() });
 
   readonly series = rxResource({
     params: () => this.type(),
     stream: ({ params }) => this.api.series(params),
   });
+
+  readonly hasValues = computed(() =>
+    Object.values(this.fields()).some((v) => v !== '' && Number(v) > 0),
+  );
 
   readonly chartPoints = computed<ChartPoint[]>(() =>
     (this.series.value() ?? []).map((m) => ({
@@ -107,19 +147,47 @@ export class MeasurementsPage {
     })),
   );
 
-  add(event: Event) {
+  placeholderFor(type: string): string {
+    const value = this.latest.value()?.[type];
+    return value !== undefined ? String(value) : '—';
+  }
+
+  setField(type: string, value: string) {
+    this.fields.update((fields) => {
+      const next = { ...fields };
+      if (value === '') {
+        delete next[type];
+      } else {
+        next[type] = value;
+      }
+      return next;
+    });
+  }
+
+  save(event: Event) {
     event.preventDefault();
-    const value = Number(this.value());
-    if (!value) return;
-    this.api
-      .add({ type: this.type(), value, measuredAt: this.date() })
-      .subscribe(() => {
-        this.value.set('');
-        this.series.reload();
-      });
+    const entries = Object.entries(this.fields()).filter(
+      ([, v]) => v !== '' && Number(v) > 0,
+    );
+    if (entries.length === 0) return;
+
+    forkJoin(
+      entries.map(([type, value]) =>
+        this.api.add({ type, value: Number(value), measuredAt: this.date() }),
+      ),
+    ).subscribe(() => {
+      this.fields.set({});
+      this.saved.set(true);
+      setTimeout(() => this.saved.set(false), 2000);
+      this.latest.reload();
+      this.series.reload();
+    });
   }
 
   remove(id: string) {
-    this.api.remove(id).subscribe(() => this.series.reload());
+    this.api.remove(id).subscribe(() => {
+      this.series.reload();
+      this.latest.reload();
+    });
   }
 }

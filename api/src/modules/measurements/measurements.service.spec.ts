@@ -55,4 +55,16 @@ describe('MeasurementsService', () => {
     await service.remove(created.id);
     expect(await service.series('weight')).toEqual([]);
   });
+
+  it('returns the latest value per type', async () => {
+    await service.add({ type: 'weight', value: 82.0, measuredAt: '2026-06-01' });
+    await service.add({ type: 'weight', value: 81.4, measuredAt: '2026-06-08' });
+    await service.add({ type: 'waist', value: 84, measuredAt: '2026-06-08' });
+
+    expect(await service.latestAll()).toEqual({ weight: 81.4, waist: 84 });
+  });
+
+  it('returns an empty map without measurements', async () => {
+    expect(await service.latestAll()).toEqual({});
+  });
 });

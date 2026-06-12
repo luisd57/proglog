@@ -11,6 +11,11 @@ export class MeasurementsController {
     return this.measurements.series(type);
   }
 
+  @Get('latest')
+  latestAll() {
+    return this.measurements.latestAll();
+  }
+
   @Post()
   add(@Body() input: MeasurementInput) {
     return this.measurements.add(input);

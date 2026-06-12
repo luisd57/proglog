@@ -43,6 +43,17 @@ export class MeasurementsService {
     });
   }
 
+  async latestAll(): Promise<Record<string, number>> {
+    const all = await this.prisma.measurement.findMany({
+      orderBy: { measuredAt: 'asc' },
+    });
+    const latest: Record<string, number> = {};
+    for (const m of all) {
+      latest[m.type] = m.value; // ascending order: last write wins
+    }
+    return latest;
+  }
+
   async latest(type: string): Promise<number | null> {
     const measurement = await this.prisma.measurement.findFirst({
       where: { type },

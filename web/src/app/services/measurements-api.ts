@@ -43,6 +43,10 @@ export class MeasurementsApi {
     return this.http.get<Measurement[]>('/api/measurements', { params });
   }
 
+  latestAll(): Observable<Record<string, number>> {
+    return this.http.get<Record<string, number>>('/api/measurements/latest');
+  }
+
   add(input: { type: string; value: number; measuredAt?: string }): Observable<Measurement> {
     return this.http.post<Measurement>('/api/measurements', input);
   }
