@@ -77,6 +77,63 @@ describe('ExercisesService', () => {
     });
   });
 
+  describe('list — tokenized search', () => {
+    // adds rows on top of the two created by the global beforeEach
+    async function seedExtra() {
+      await prisma.exercise.createMany({
+        data: [
+          {
+            id: 'seed-chin',
+            name: 'Chin-Up',
+            primaryMuscles: JSON.stringify(['lats']),
+            secondaryMuscles: JSON.stringify(['biceps']),
+            equipment: 'body only',
+            category: 'strength',
+            isCustom: false,
+          },
+          {
+            id: 'seed-front-cable',
+            name: 'Front Cable Raise',
+            primaryMuscles: JSON.stringify(['shoulders']),
+            secondaryMuscles: JSON.stringify([]),
+            equipment: 'cable',
+            category: 'strength',
+            isCustom: false,
+          },
+        ],
+      });
+    }
+
+    it('matches non-adjacent words in any order', async () => {
+      await seedExtra();
+      const result = await service.list({ search: 'front raise' });
+      expect(result.map((e) => e.name)).toEqual(['Front Cable Raise']);
+
+      const reordered = await service.list({ search: 'cable front' });
+      expect(reordered.map((e) => e.name)).toEqual(['Front Cable Raise']);
+    });
+
+    it('is tolerant of plurals and hyphens', async () => {
+      await seedExtra();
+      const result = await service.list({ search: 'chin ups' });
+      expect(result.map((e) => e.name)).toEqual(['Chin-Up']);
+    });
+
+    it('still matches a single word substring', async () => {
+      const result = await service.list({ search: 'bench' });
+      expect(result.map((e) => e.name)).toEqual(['Barbell Bench Press']);
+    });
+
+    it('combines tokenized search with the muscle filter', async () => {
+      await seedExtra();
+      const result = await service.list({
+        search: 'cable raise',
+        muscle: 'shoulders',
+      });
+      expect(result.map((e) => e.name)).toEqual(['Front Cable Raise']);
+    });
+  });
+
   describe('get', () => {
     it('returns a single exercise with muscle arrays parsed', async () => {
       const result = await service.get('seed-bench');

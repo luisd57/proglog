@@ -47,7 +47,18 @@ export class ExercisesService {
   async list(filters?: ExerciseFilters): Promise<ExerciseDto[]> {
     const where: Record<string, unknown>[] = [];
     if (filters?.search) {
-      where.push({ name: { contains: filters.search } });
+      // tokenize: each word must appear in the name (any order), tolerant of
+      // hyphens/punctuation and simple plurals, so "chin ups" finds "Chin-Up"
+      // and "front raise" finds "Front Cable Raise"
+      const tokens = filters.search
+        .toLowerCase()
+        .split(/\s+/)
+        .map((t) => t.replace(/[^a-z0-9]/g, ''))
+        .filter(Boolean)
+        .map((t) => (t.length > 2 && t.endsWith('s') ? t.slice(0, -1) : t));
+      for (const token of tokens) {
+        where.push({ name: { contains: token } });
+      }
     }
     if (filters?.muscle) {
       // muscles are stored as JSON string arrays, so match the quoted value
