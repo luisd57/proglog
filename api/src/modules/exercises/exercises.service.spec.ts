@@ -134,6 +134,56 @@ describe('ExercisesService', () => {
     });
   });
 
+  describe('list — search ranking', () => {
+    function mk(id: string, name: string, primary: string[]) {
+      return {
+        id,
+        name,
+        primaryMuscles: JSON.stringify(primary),
+        secondaryMuscles: JSON.stringify([]),
+        equipment: 'body only',
+        category: 'strength',
+        isCustom: false,
+      };
+    }
+
+    it('ranks the plainest match ahead of wordier variants', async () => {
+      await prisma.exercise.createMany({
+        data: [
+          mk('r-incline', 'Incline Push-Up Reverse Grip', ['chest']),
+          mk('r-decline', 'Decline Push-Up', ['chest']),
+          mk('r-plain', 'Pushups', ['chest']),
+        ],
+      });
+      const result = await service.list({ search: 'push up' });
+      expect(result[0].name).toBe('Pushups');
+    });
+
+    it('ranks an exact name match first', async () => {
+      await prisma.exercise.createMany({
+        data: [
+          mk('r-onearm', 'One Arm Chin-Up', ['lats']),
+          mk('r-chin', 'Chin-Up', ['lats']),
+          mk('r-wide', 'Wide-Grip Chin-Up', ['lats']),
+        ],
+      });
+      const result = await service.list({ search: 'chin up' });
+      expect(result[0].name).toBe('Chin-Up');
+    });
+
+    it('prefers whole-word matches over mid-word coincidences', async () => {
+      await prisma.exercise.createMany({
+        data: [
+          // "chin" is a substring of "Machine", so both match the filter
+          mk('r-machine', 'Machine Row', ['middle back']),
+          mk('r-chinraise', 'Chin Raise', ['neck']),
+        ],
+      });
+      const result = await service.list({ search: 'chin' });
+      expect(result.map((e) => e.name)).toEqual(['Chin Raise', 'Machine Row']);
+    });
+  });
+
   describe('get', () => {
     it('returns a single exercise with muscle arrays parsed', async () => {
       const result = await service.get('seed-bench');

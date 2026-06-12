@@ -40,25 +40,68 @@ export function toExerciseDto(exercise: Exercise): ExerciseDto {
   };
 }
 
+function searchTokens(search: string): string[] {
+  return search
+    .toLowerCase()
+    .split(/\s+/)
+    .map((t) => t.replace(/[^a-z0-9]/g, ''))
+    .filter(Boolean)
+    .map((t) => (t.length > 2 && t.endsWith('s') ? t.slice(0, -1) : t));
+}
+
+function normalizeName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+// Rank already-filtered matches so the closest one floats to the top:
+// exact name match, then fewest words, then genuine whole-word matches over
+// mid-word coincidences (e.g. "chin" inside "machine"), then shorter name.
+// Relies on a stable sort over an alphabetically-ordered input for ties.
+function rankBySearch(
+  items: ExerciseDto[],
+  tokens: string[],
+  normalizedQuery: string,
+): ExerciseDto[] {
+  return items
+    .map((exercise) => {
+      const norm = normalizeName(exercise.name);
+      const words = norm.split(' ');
+      const allWholeWord = tokens.every((t) =>
+        words.some((w) => w === t || w.startsWith(t)),
+      );
+      return {
+        exercise,
+        exact: norm === normalizedQuery ? 0 : 1,
+        wordCount: words.length,
+        wholeWord: allWholeWord ? 0 : 1,
+        length: exercise.name.length,
+      };
+    })
+    .sort(
+      (a, b) =>
+        a.exact - b.exact ||
+        a.wordCount - b.wordCount ||
+        a.wholeWord - b.wholeWord ||
+        a.length - b.length,
+    )
+    .map((ranked) => ranked.exercise);
+}
+
 @Injectable()
 export class ExercisesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async list(filters?: ExerciseFilters): Promise<ExerciseDto[]> {
     const where: Record<string, unknown>[] = [];
-    if (filters?.search) {
-      // tokenize: each word must appear in the name (any order), tolerant of
-      // hyphens/punctuation and simple plurals, so "chin ups" finds "Chin-Up"
-      // and "front raise" finds "Front Cable Raise"
-      const tokens = filters.search
-        .toLowerCase()
-        .split(/\s+/)
-        .map((t) => t.replace(/[^a-z0-9]/g, ''))
-        .filter(Boolean)
-        .map((t) => (t.length > 2 && t.endsWith('s') ? t.slice(0, -1) : t));
-      for (const token of tokens) {
-        where.push({ name: { contains: token } });
-      }
+    // tokenize: each word must appear in the name (any order), tolerant of
+    // hyphens/punctuation and simple plurals, so "chin ups" finds "Chin-Up"
+    // and "front raise" finds "Front Cable Raise"
+    const tokens = filters?.search ? searchTokens(filters.search) : [];
+    for (const token of tokens) {
+      where.push({ name: { contains: token } });
     }
     if (filters?.muscle) {
       // muscles are stored as JSON string arrays, so match the quoted value
@@ -77,7 +120,10 @@ export class ExercisesService {
       where: { AND: where },
       orderBy: { name: 'asc' },
     });
-    return exercises.map(toExerciseDto);
+    const dtos = exercises.map(toExerciseDto);
+    return tokens.length
+      ? rankBySearch(dtos, tokens, normalizeName(filters!.search!))
+      : dtos;
   }
 
   async get(id: string): Promise<ExerciseDto> {
