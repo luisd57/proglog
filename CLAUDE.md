@@ -55,4 +55,6 @@ Development is TDD: nontrivial logic (stats, PR detection, strength levels) is w
 - [x] Phase 5: Overload stats — `exerciseSeries` (per-finished-session topSet/volume/e1RM + chronological PR events; TDD, 3 more tests), chart.js (no ng2-charts wrapper — used directly for Angular 22 compat), `LineChart` component, exercise detail page shows 3 progress charts + PR table when history exists.
 - [x] Phase 6: Strength levels — hardcoded approximate standards tables (`api/src/modules/stats/strength-standards.ts`, male+female, 5 lifts, bodyweight-interpolated; TDD: 6 tests on `levelFor` + table sanity, 3 on service), `/api/stats/strength-levels` (needs sex in profile + a weight measurement), strength page with level badges + progress bars.
 - [x] Phase 7: Measurements — measurements module (TDD: 4 tests; 15 fixed types, latest-weight feeds strength levels), profile module (GET/PATCH, single row id=1), measurements page (entry + chart + list), settings page (sex/birth date/default rest).
-- [ ] Phase 8: Dashboard, weekly recap, PWA
+- [x] Phase 8: Dashboard, weekly recap, PWA — `/api/stats/weekly-muscles` (finished sessions, last 7 days, working sets only; TDD: 2 tests), dashboard home (quick-start buttons, weekly diagram, recent sessions), @angular/pwa (service worker prod-only, manifest themed). PWA install: open the served app in Safari → Add to Home Screen.
+
+All 8 phases complete (2026-06-12). Suites: 54 API unit + 6 API e2e (Jest), 33 web (Vitest).

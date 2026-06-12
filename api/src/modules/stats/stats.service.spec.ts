@@ -130,6 +130,46 @@ describe('StatsService.exerciseBest', () => {
     });
   });
 
+  describe('weeklyMuscles', () => {
+    it('aggregates muscles from finished sessions of the last 7 days', async () => {
+      await prisma.exercise.create({
+        data: {
+          id: 'ex-row2',
+          name: 'Row',
+          primaryMuscles: JSON.stringify(['middle back']),
+          secondaryMuscles: JSON.stringify(['biceps']),
+          isCustom: false,
+        },
+      });
+      // recent finished session with bench (chest primary)
+      await logFinishedSession([{ weightKg: 80, reps: 8 }]);
+
+      // old session with row — must not count
+      const old = await sessions.start();
+      const withRow = await sessions.addExercise(old.id, 'ex-row2');
+      await sessions.replaceSets(old.id, withRow.exercises[0].id, [
+        { weightKg: 60, reps: 10 },
+      ]);
+      await sessions.finish(old.id);
+      await prisma.session.update({
+        where: { id: old.id },
+        data: { startedAt: new Date(Date.now() - 10 * 24 * 3600 * 1000) },
+      });
+
+      const result = await service.weeklyMuscles();
+      expect(result.primary).toEqual(['chest']);
+      expect(result.secondary).toEqual([]);
+      expect(result.sessionCount).toBe(1);
+    });
+
+    it('does not count exercises without working sets', async () => {
+      await logFinishedSession([{ weightKg: 60, reps: 10, isWarmup: true }]);
+      const result = await service.weeklyMuscles();
+      expect(result.primary).toEqual([]);
+      expect(result.sessionCount).toBe(0);
+    });
+  });
+
   describe('strengthLevels', () => {
     beforeEach(async () => {
       await prisma.measurement.deleteMany();

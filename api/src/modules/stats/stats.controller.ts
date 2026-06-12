@@ -22,4 +22,9 @@ export class StatsController {
   strengthLevels() {
     return this.stats.strengthLevels();
   }
+
+  @Get('weekly-muscles')
+  weeklyMuscles() {
+    return this.stats.weeklyMuscles();
+  }
 }

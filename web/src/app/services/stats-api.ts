@@ -47,6 +47,16 @@ export class StatsApi {
   strengthLevels(): Observable<StrengthLevelsResult> {
     return this.http.get<StrengthLevelsResult>('/api/stats/strength-levels');
   }
+
+  weeklyMuscles(): Observable<WeeklyMuscles> {
+    return this.http.get<WeeklyMuscles>('/api/stats/weekly-muscles');
+  }
+}
+
+export interface WeeklyMuscles {
+  primary: string[];
+  secondary: string[];
+  sessionCount: number;
 }
 
 export interface StrengthLevelEntry {

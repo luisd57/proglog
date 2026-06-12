@@ -134,6 +134,40 @@ export class StatsService {
     return { points, prs };
   }
 
+  async weeklyMuscles(): Promise<{
+    primary: string[];
+    secondary: string[];
+    sessionCount: number;
+  }> {
+    const since = new Date(Date.now() - 7 * 24 * 3600 * 1000);
+    const sessionExercises = await this.prisma.sessionExercise.findMany({
+      where: {
+        session: { finishedAt: { not: null }, startedAt: { gte: since } },
+        sets: { some: { isWarmup: false } },
+      },
+      include: { exercise: true },
+    });
+
+    const primary = new Set<string>();
+    const secondary = new Set<string>();
+    const sessionIds = new Set<string>();
+    for (const se of sessionExercises) {
+      sessionIds.add(se.sessionId);
+      (JSON.parse(se.exercise.primaryMuscles) as string[]).forEach((m) =>
+        primary.add(m),
+      );
+      (JSON.parse(se.exercise.secondaryMuscles) as string[]).forEach((m) =>
+        secondary.add(m),
+      );
+    }
+    for (const m of primary) secondary.delete(m);
+    return {
+      primary: [...primary],
+      secondary: [...secondary],
+      sessionCount: sessionIds.size,
+    };
+  }
+
   async strengthLevels(): Promise<StrengthLevelsResult> {
     const weight = await this.prisma.measurement.findFirst({
       where: { type: 'weight' },
