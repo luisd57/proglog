@@ -1,4 +1,4 @@
-import {
+﻿import {
   BadRequestException,
   Injectable,
   NotFoundException,
@@ -32,7 +32,7 @@ export interface CreateExerciseInput {
   instructions?: string;
 }
 
-function toDto(exercise: Exercise): ExerciseDto {
+export function toExerciseDto(exercise: Exercise): ExerciseDto {
   return {
     ...exercise,
     primaryMuscles: JSON.parse(exercise.primaryMuscles) as string[],
@@ -66,7 +66,7 @@ export class ExercisesService {
       where: { AND: where },
       orderBy: { name: 'asc' },
     });
-    return exercises.map(toDto);
+    return exercises.map(toExerciseDto);
   }
 
   async get(id: string): Promise<ExerciseDto> {
@@ -74,7 +74,7 @@ export class ExercisesService {
     if (!exercise) {
       throw new NotFoundException(`Exercise ${id} not found`);
     }
-    return toDto(exercise);
+    return toExerciseDto(exercise);
   }
 
   async createCustom(input: CreateExerciseInput): Promise<ExerciseDto> {
@@ -95,7 +95,7 @@ export class ExercisesService {
         isCustom: true,
       },
     });
-    return toDto(created);
+    return toExerciseDto(created);
   }
 
   async updateCustom(
@@ -126,7 +126,7 @@ export class ExercisesService {
         }),
       },
     });
-    return toDto(updated);
+    return toExerciseDto(updated);
   }
 
   async removeCustom(id: string): Promise<void> {
@@ -146,3 +146,4 @@ export class ExercisesService {
     }
   }
 }
+

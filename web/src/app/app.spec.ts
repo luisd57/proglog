@@ -16,11 +16,15 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
-  it('should render the nav with brand and exercises link', async () => {
+  it('should render the nav with brand and section links', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('.brand')?.textContent).toContain('ProgLog');
-    expect(compiled.querySelector('nav a')?.textContent).toContain('Exercises');
+    const links = [...compiled.querySelectorAll('nav a')].map(
+      (a) => a.textContent?.trim(),
+    );
+    expect(links).toContain('Workouts');
+    expect(links).toContain('Exercises');
   });
 });

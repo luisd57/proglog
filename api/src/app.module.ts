@@ -5,6 +5,7 @@ import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ExercisesModule } from './modules/exercises/exercises.module';
+import { TemplatesModule } from './modules/templates/templates.module';
 import { PrismaModule } from './prisma/prisma.module';
 
 // In the prod image the Angular build is copied to /app/public; in dev the
@@ -15,6 +16,7 @@ const clientDist = join(__dirname, '..', 'public');
   imports: [
     PrismaModule,
     ExercisesModule,
+    TemplatesModule,
     ...(existsSync(clientDist)
       ? [
           ServeStaticModule.forRoot({
