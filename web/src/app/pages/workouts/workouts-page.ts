@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { SessionsApi } from '../../services/sessions-api';
 import { TemplatesApi } from '../../services/templates-api';
 
 @Component({
@@ -24,6 +25,7 @@ import { TemplatesApi } from '../../services/templates-api';
               <span class="name">{{ t.name }}</span>
               <span class="chip">{{ t.exerciseCount }} exercises</span>
             </a>
+            <button class="button" (click)="start(t.id)">Start</button>
           </li>
         }
       </ul>
@@ -40,7 +42,13 @@ import { TemplatesApi } from '../../services/templates-api';
       flex-direction: column;
       gap: 0.5rem;
     }
+    .template-list li {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
     .template-list a {
+      flex: 1;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -58,8 +66,16 @@ import { TemplatesApi } from '../../services/templates-api';
 })
 export class WorkoutsPage {
   private readonly api = inject(TemplatesApi);
+  private readonly sessionsApi = inject(SessionsApi);
+  private readonly router = inject(Router);
 
   readonly templates = rxResource({
     stream: () => this.api.list(),
   });
+
+  start(templateId: string) {
+    this.sessionsApi.start(templateId).subscribe((session) => {
+      void this.router.navigate(['/log', session.id]);
+    });
+  }
 }

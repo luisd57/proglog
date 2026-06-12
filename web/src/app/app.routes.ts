@@ -22,6 +22,16 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'log/:id',
+    loadComponent: () =>
+      import('./pages/log/log-page').then((m) => m.LogPage),
+  },
+  {
+    path: 'history',
+    loadComponent: () =>
+      import('./pages/history/history-page').then((m) => m.HistoryPage),
+  },
+  {
     path: 'exercises',
     loadComponent: () =>
       import('./pages/exercises/exercises-page').then((m) => m.ExercisesPage),

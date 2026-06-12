@@ -5,6 +5,8 @@ import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ExercisesModule } from './modules/exercises/exercises.module';
+import { SessionsModule } from './modules/sessions/sessions.module';
+import { StatsModule } from './modules/stats/stats.module';
 import { TemplatesModule } from './modules/templates/templates.module';
 import { PrismaModule } from './prisma/prisma.module';
 
@@ -17,6 +19,8 @@ const clientDist = join(__dirname, '..', 'public');
     PrismaModule,
     ExercisesModule,
     TemplatesModule,
+    SessionsModule,
+    StatsModule,
     ...(existsSync(clientDist)
       ? [
           ServeStaticModule.forRoot({
