@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { epley1Rm } from './e1rm';
+import {
+  Level,
+  levelFor,
+  STRENGTH_STANDARDS,
+} from './strength-standards';
 
 export interface ExerciseBest {
   bestWeightKg: number | null;
@@ -25,6 +30,24 @@ export interface PrEvent {
 export interface ExerciseSeries {
   points: SeriesPoint[];
   prs: PrEvent[];
+}
+
+export interface StrengthLevelEntry {
+  lift: string;
+  label: string;
+  exerciseId: string | null;
+  e1rm: number | null;
+  level: Level | null;
+  nextLevel: Level | null;
+  progress: number | null;
+  thresholds: number[];
+}
+
+export interface StrengthLevelsResult {
+  ready: boolean;
+  reason?: 'no-profile' | 'no-bodyweight';
+  bodyweightKg?: number;
+  levels: StrengthLevelEntry[];
 }
 
 @Injectable()
@@ -109,5 +132,57 @@ export class StatsService {
     }
 
     return { points, prs };
+  }
+
+  async strengthLevels(): Promise<StrengthLevelsResult> {
+    const weight = await this.prisma.measurement.findFirst({
+      where: { type: 'weight' },
+      orderBy: { measuredAt: 'desc' },
+    });
+    if (!weight) {
+      return { ready: false, reason: 'no-bodyweight', levels: [] };
+    }
+    const profile = await this.prisma.profile.findUnique({ where: { id: 1 } });
+    const sex = profile?.sex === 'female' ? 'female' : profile?.sex === 'male' ? 'male' : null;
+    if (!sex) {
+      return { ready: false, reason: 'no-profile', levels: [] };
+    }
+
+    const levels: StrengthLevelEntry[] = [];
+    for (const standard of STRENGTH_STANDARDS) {
+      const exercise = await this.prisma.exercise.findFirst({
+        where: { name: { in: standard.exerciseNames } },
+      });
+      const best = exercise
+        ? await this.exerciseBest(exercise.id)
+        : { bestWeightKg: null, bestE1rm: null };
+
+      if (exercise && best.bestE1rm !== null) {
+        const result = levelFor(standard[sex], weight.value, best.bestE1rm);
+        levels.push({
+          lift: standard.lift,
+          label: standard.label,
+          exerciseId: exercise.id,
+          e1rm: best.bestE1rm,
+          level: result.level,
+          nextLevel: result.nextLevel,
+          progress: result.progress,
+          thresholds: result.thresholds,
+        });
+      } else {
+        const thresholds = levelFor(standard[sex], weight.value, 0).thresholds;
+        levels.push({
+          lift: standard.lift,
+          label: standard.label,
+          exerciseId: exercise?.id ?? null,
+          e1rm: null,
+          level: null,
+          nextLevel: null,
+          progress: null,
+          thresholds,
+        });
+      }
+    }
+    return { ready: true, bodyweightKg: weight.value, levels };
   }
 }

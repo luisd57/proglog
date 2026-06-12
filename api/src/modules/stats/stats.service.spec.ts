@@ -129,4 +129,65 @@ describe('StatsService.exerciseBest', () => {
       expect(series).toEqual({ points: [], prs: [] });
     });
   });
+
+  describe('strengthLevels', () => {
+    beforeEach(async () => {
+      await prisma.measurement.deleteMany();
+      await prisma.profile.upsert({
+        where: { id: 1 },
+        update: { sex: 'male' },
+        create: { id: 1, sex: 'male' },
+      });
+      // the standards match seeded names; create the bench standard exercise
+      await prisma.exercise.create({
+        data: {
+          id: 'ex-std-bench',
+          name: 'Barbell Bench Press - Medium Grip',
+          primaryMuscles: JSON.stringify(['chest']),
+          secondaryMuscles: JSON.stringify([]),
+          isCustom: false,
+        },
+      });
+    });
+
+    it('reports not ready without bodyweight', async () => {
+      const result = await service.strengthLevels();
+      expect(result.ready).toBe(false);
+      expect(result.reason).toBe('no-bodyweight');
+    });
+
+    it('reports not ready without sex in profile', async () => {
+      await prisma.profile.update({ where: { id: 1 }, data: { sex: null } });
+      await prisma.measurement.create({
+        data: { type: 'weight', value: 80 },
+      });
+      const result = await service.strengthLevels();
+      expect(result.ready).toBe(false);
+      expect(result.reason).toBe('no-profile');
+    });
+
+    it('computes the level for lifts with history', async () => {
+      await prisma.measurement.create({
+        data: { type: 'weight', value: 80 },
+      });
+      // log a finished bench session: 100kg × 5 → e1RM ≈ 116.7 (advanced @80kg starts 118)
+      const session = await sessions.start();
+      const withExercise = await sessions.addExercise(session.id, 'ex-std-bench');
+      await sessions.replaceSets(session.id, withExercise.exercises[0].id, [
+        { weightKg: 100, reps: 5 },
+      ]);
+      await sessions.finish(session.id);
+
+      const result = await service.strengthLevels();
+      expect(result.ready).toBe(true);
+      const bench = result.levels.find((l) => l.lift === 'bench');
+      expect(bench).toBeDefined();
+      expect(bench!.e1rm).toBeCloseTo(116.67, 1);
+      expect(bench!.level).toBe('intermediate');
+      expect(bench!.nextLevel).toBe('advanced');
+      // lifts without history have no level
+      const squat = result.levels.find((l) => l.lift === 'squat');
+      expect(squat!.e1rm).toBeNull();
+    });
+  });
 });

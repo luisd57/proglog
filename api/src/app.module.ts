@@ -5,6 +5,8 @@ import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ExercisesModule } from './modules/exercises/exercises.module';
+import { MeasurementsModule } from './modules/measurements/measurements.module';
+import { ProfileModule } from './modules/profile/profile.module';
 import { SessionsModule } from './modules/sessions/sessions.module';
 import { StatsModule } from './modules/stats/stats.module';
 import { TemplatesModule } from './modules/templates/templates.module';
@@ -21,6 +23,8 @@ const clientDist = join(__dirname, '..', 'public');
     TemplatesModule,
     SessionsModule,
     StatsModule,
+    MeasurementsModule,
+    ProfileModule,
     ...(existsSync(clientDist)
       ? [
           ServeStaticModule.forRoot({

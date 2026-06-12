@@ -32,6 +32,23 @@ export const routes: Routes = [
       import('./pages/history/history-page').then((m) => m.HistoryPage),
   },
   {
+    path: 'strength',
+    loadComponent: () =>
+      import('./pages/strength/strength-page').then((m) => m.StrengthPage),
+  },
+  {
+    path: 'measurements',
+    loadComponent: () =>
+      import('./pages/measurements/measurements-page').then(
+        (m) => m.MeasurementsPage,
+      ),
+  },
+  {
+    path: 'settings',
+    loadComponent: () =>
+      import('./pages/settings/settings-page').then((m) => m.SettingsPage),
+  },
+  {
     path: 'exercises',
     loadComponent: () =>
       import('./pages/exercises/exercises-page').then((m) => m.ExercisesPage),

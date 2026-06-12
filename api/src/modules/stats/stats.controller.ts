@@ -17,4 +17,9 @@ export class StatsController {
   exerciseSeries(@Param('id') id: string) {
     return this.stats.exerciseSeries(id);
   }
+
+  @Get('strength-levels')
+  strengthLevels() {
+    return this.stats.strengthLevels();
+  }
 }
