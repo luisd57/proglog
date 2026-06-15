@@ -6,6 +6,10 @@
 
 4. Flag uncertainty explicitly. If you are not confident about an approach or technical detail, say so before proceeding. Confidence without certainty causes more damage than admitting a gap.
 
+## Process Skills (Superpowers)
+
+Brainstorming, TDD, systematic debugging, verification-before-completion, and code review come from the Superpowers plugin — invoke those skills; do NOT restate their guidance here. Keep this file and `.claude/rules/` focused on project facts and conventions Superpowers doesn't cover.
+
 # ProgLog
 
 Single-user strength training tracker (personal StrengthLog replacement, no auth, no monetization). Workout templates ("splits"), session logging with rest timer and warm-up sets, progressive overload stats (e1RM/top set/volume/PRs), strength-level ratings from standards tables, body measurements, and muscle highlighting (primary/secondary) on an SVG body diagram. Units: kg only. iOS path is a PWA over LAN/Tailscale — no native build.
@@ -15,11 +19,11 @@ Full design + phase plan: `C:\Users\luisr\.claude\plans\i-use-the-ios-wobbly-spr
 ## Workflow Rules
 
 When the user says "/done" or indicates a feature/milestone is complete:
-1. Update the "Implementation Status" section at the bottom of this file
-2. If the work revealed reusable patterns or gotchas, suggest updating auto-memory (but ask first)
-3. Do NOT update .claude/rules/ files unless explicitly asked
+1. Update the "Implementation Status" section at the bottom of this file.
+2. If the work revealed reusable patterns or gotchas, suggest updating auto-memory (but ask first).
+3. Do NOT update `.claude/rules/` files unless explicitly asked.
 
-Development is TDD: nontrivial logic (stats, PR detection, strength levels) is written test-first with Jest in `api/`. All tooling runs in Docker — never run npm/node on the host.
+Memory: keep all auto-memory inline in `MEMORY.md` — one file only, do NOT create per-memory files. Follow `.claude/rules/documentation-style.md` terseness for memory entries too.
 
 ## Project Structure
 
@@ -27,16 +31,6 @@ Development is TDD: nontrivial logic (stats, PR detection, strength levels) is w
 - `web/` — Angular 22 (standalone components, signals). Vitest for unit tests. Dev server proxies `/api` → api container (`proxy.conf.json`).
 - `Dockerfile` — multi-stage prod build: Angular build + Nest build → one `node:24-alpine` container; Nest serves the SPA from `/app/public` and the API under `/api`.
 - `data/` — SQLite database (gitignored). Backup = copy `data/proglog.db`.
-
-## Dev Environment
-
-- Dev: `docker compose -f docker-compose.dev.yml up` → web on :4200 (hot reload via polling), api on :3000.
-- Prod: `docker compose up --build` → everything on :8080.
-- API tests: `docker compose -f docker-compose.dev.yml run --rm api npm test` (`test:e2e` for e2e).
-- Web tests: `docker compose -f docker-compose.dev.yml run --rm web npm test`.
-- New migration: `docker compose -f docker-compose.dev.yml run --rm api npx prisma migrate dev --name <name>`.
-- After changing package.json: rebuild images (`docker compose -f docker-compose.dev.yml build`) and run `docker compose -f docker-compose.dev.yml down -v` first if node_modules volumes are stale. Regenerate lockfiles with `docker run --rm -v "${PWD}\api:/app" -w /app node:24-alpine npm install --package-lock-only --ignore-scripts`.
-- Prisma is pinned to v6 (v7 exists; do not upgrade without asking).
 
 ## Domain Terminology
 
@@ -46,25 +40,33 @@ Development is TDD: nontrivial logic (stats, PR detection, strength levels) is w
 - **Strength level**: beginner/novice/intermediate/advanced/elite from hardcoded bodyweight×sex standards tables (squat, bench, deadlift, OHP, row).
 - **Muscle highlighting**: primary muscles full color, secondary lighter — shown per exercise, per template (aggregate), and weekly recap.
 
+## Dev Environment
+
+All tooling runs in Docker — never run npm/node on the host.
+
+- Dev: `docker compose -f docker-compose.dev.yml up` → web on :4200 (hot reload via polling), api on :3000.
+- Prod: `docker compose up --build` → everything on :8080.
+- API tests: `docker compose -f docker-compose.dev.yml run --rm api npm test` (`test:e2e` for e2e).
+- Web tests: `docker compose -f docker-compose.dev.yml run --rm web npm test`.
+- New migration: `docker compose -f docker-compose.dev.yml run --rm api npx prisma migrate dev --name <name>`.
+- After changing package.json: rebuild images (`docker compose -f docker-compose.dev.yml build`) and run `docker compose -f docker-compose.dev.yml down -v` first if node_modules volumes are stale. Regenerate lockfiles with `docker run --rm -v "${PWD}\api:/app" -w /app node:24-alpine npm install --package-lock-only --ignore-scripts`.
+
+## Adding Project-Specific Rules
+
+Stack/architecture conventions go in `.claude/rules/*.md`. Add `paths:` frontmatter to scope a rule to matching files (lazy-loaded); omit it for always-on rules. Follow `.claude/rules/documentation-style.md`.
+
 ## Implementation Status
 
-- [x] Phase 1: Scaffold & plumbing — Nest+Angular scaffolds, Prisma schema + init migration, dev compose (hot reload) and prod single-container image both verified, test suites green in Docker.
-- [x] Phase 2: Exercise DB seed + muscle diagram — 873 exercises seeded (seed runs via dev compose; prod image has no ts-node), exercises module with filters (TDD, 13 unit + 4 e2e tests), `MuscleDiagram` component with vendored MIT SVG data (`web/src/app/components/muscle-diagram/`), browser/detail/new pages. Note: web tests touching @angular/common/http must run via `ng test`, not raw `vitest` (AOT linker).
-- [x] Phase 3: Workout templates — templates module (TDD: 7 unit + 1 e2e), full-replace PUT semantics, `/templates/:id/muscles` aggregate (primary wins over secondary), editor page with search picker + live muscle coverage diagram. Gotcha fixed: tsc watch needs `watchOptions` polling in tsconfig.json for new files to be seen through Windows bind mounts — restart the api container after adding new files if routes 404.
-- [x] Phase 4: Session logging — sessions module (TDD: 9 unit tests; start-from-template, previous-set prefill from latest *finished* session, replace-sets, finish, history), stats module begun (`epley1Rm`, `exerciseBest` PR baseline; 6 tests), log page with per-exercise cards (warm-up toggle, debounced saves, live PR badges, notes), `RestTimer` (4 tests, WebAudio beep), history page, Start buttons. Web-test gotcha: after flushing an rxResource request, `await fixture.whenStable()` before reading `.value()`.
-- [x] Phase 5: Overload stats — `exerciseSeries` (per-finished-session topSet/volume/e1RM + chronological PR events; TDD, 3 more tests), chart.js (no ng2-charts wrapper — used directly for Angular 22 compat), `LineChart` component, exercise detail page shows 3 progress charts + PR table when history exists.
-- [x] Phase 6: Strength levels — hardcoded approximate standards tables (`api/src/modules/stats/strength-standards.ts`, male+female, 5 lifts, bodyweight-interpolated; TDD: 6 tests on `levelFor` + table sanity, 3 on service), `/api/stats/strength-levels` (needs sex in profile + a weight measurement), strength page with level badges + progress bars.
-- [x] Phase 7: Measurements — measurements module (TDD: 4 tests; 15 fixed types, latest-weight feeds strength levels), profile module (GET/PATCH, single row id=1), measurements page (entry + chart + list), settings page (sex/birth date/default rest).
-- [x] Phase 8: Dashboard, weekly recap, PWA — `/api/stats/weekly-muscles` (finished sessions, last 7 days, working sets only; TDD: 2 tests), dashboard home (quick-start buttons, weekly diagram, recent sessions), @angular/pwa (service worker prod-only, manifest themed). PWA install: open the served app in Safari → Add to Home Screen.
+- [x] Phase 1: Scaffold & plumbing
+- [x] Phase 2: Exercise DB seed + muscle diagram
+- [x] Phase 3: Workout templates
+- [x] Phase 4: Session logging
+- [x] Phase 5: Overload stats
+- [x] Phase 6: Strength levels
+- [x] Phase 7: Measurements
+- [x] Phase 8: Dashboard, weekly recap, PWA
+- [x] Dashboard Overview widget (2026-06-15)
 
 All 8 phases complete (2026-06-12). Suites: 69 API unit + 8 API e2e (Jest), 53 web (Vitest).
 
-- [x] Dashboard Overview widget (2026-06-15) — `/api/stats/overview?period=7d|30d|90d|365d|all` (TDD: 6 unit + 2 e2e; finished sessions + working sets only, mirrors `weeklyMuscles` query). Returns `{ current, previous, cumulativeVolume }`; `previous` is `null` for all-time, deltas compare to the immediately preceding equal-length window, `Time` = Σ session durations, cumulative volume bucketed by server-local day. `OverviewWidget` (`web/src/app/pages/dashboard/overview-widget.ts`) above the dashboard grid: period `<select>`, reused `LineChart`, 6-stat grid with green/red deltas; pure `delta`/`formatDuration` helpers in `web/src/app/utils/overview.ts` (kept out of the HTTP component for Vitest). Flicker gotcha: `rxResource.value()` collapses to `undefined` mid-fetch — hold the last result in a `linkedSignal` (`view`) and dim while `isLoading()` instead of `@if`-ing on `value()`, or the card unmounts on every param change. Note: Lifted/Heaviest/volume read 0 for bodyweight sets (`weightKg = 0`) until bodyweight loading lands.
-
-Reference screenshots live in gitignored `FeatureScreenshots/` (StrengthLog feature targets, not docs). Deferred TODOs from that set (each its own spec): latest-workouts carousel; Statistics page + nav tab ("Most trained muscle groups"/"exercises" bar charts — needs a bar-chart component, only `LineChart` exists); during-workout bodyweight-relative loading (`BW ±kg`, needs an `Exercise` bodyweight flag + `SetLog` loading semantics) and an elapsed session timer.
-
-Exercise search (`ExercisesService.list`) is tokenized AND ranked. Tokenize: query split into words, each lightly de-pluralized, every token must appear as a substring of the name (ANDed, any order) — surfaces "Chin-Up" for `chin ups`, "Front Cable Raise" for `front raise`. Rank (`rankBySearch`): exact-name match, then fewest words, then whole-word matches over mid-word coincidences (`chin` ⊂ `machine`), then shorter name; relies on a stable sort over alphabetically-ordered rows. So `push up` leads with the plain "Pushups" and machine-noise sinks. No-search listing stays alphabetical.
-
-Post-release fixes: date inputs must commit on `(change)`, never `(input)` — partial dates report `value=""` and the `[value]` write-back wipes the user's typing. Measurements entry is one form for all 15 types (`GET /api/measurements/latest` feeds placeholders; only filled fields POST).
-
-Body-fat estimate: US Navy method in `web/src/app/utils/body-fat.ts` (needs sex + height from profile, neck + waist, and hips for women). Height is `Profile.heightCm` (added in settings). The measurements page shows a live readout (typed girths override latest saved) with a "Log it" button that writes a `bodyfat` entry. NOTE: after a Prisma schema change, regenerate the client in the *running* dev api container (`docker compose -f docker-compose.dev.yml exec api npx prisma generate` then restart) — `run --rm` migrations don't touch the up container's node_modules volume.
+Deferred TODOs (each its own spec): latest-workouts carousel; Statistics page + nav tab (most-trained muscle groups/exercises bar charts — needs a bar-chart component, only `LineChart` exists); during-workout bodyweight-relative loading (`BW ±kg`, needs an `Exercise` bodyweight flag + `SetLog` loading semantics) and an elapsed session timer. Reference screenshots live in gitignored `FeatureScreenshots/` (StrengthLog feature targets, not docs).
