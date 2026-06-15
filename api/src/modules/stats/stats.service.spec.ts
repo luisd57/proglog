@@ -45,6 +45,14 @@ describe('StatsService.exerciseBest', () => {
     return session.id;
   }
 
+  async function backdate(id: string, daysAgo: number) {
+    const t = new Date(Date.now() - daysAgo * 24 * 3600 * 1000);
+    await prisma.session.update({
+      where: { id },
+      data: { startedAt: t, finishedAt: t },
+    });
+  }
+
   it('returns best weight and best e1RM over working sets of finished sessions', async () => {
     await logFinishedSession([
       { weightKg: 60, reps: 12, isWarmup: true }, // warmup ignored: e1rm 84
@@ -228,6 +236,83 @@ describe('StatsService.exerciseBest', () => {
       // lifts without history have no level
       const squat = result.levels.find((l) => l.lift === 'squat');
       expect(squat!.e1rm).toBeNull();
+    });
+  });
+
+  describe('overview', () => {
+    it('totals working sets of finished sessions, excluding warm-ups', async () => {
+      await logFinishedSession([
+        { weightKg: 60, reps: 10, isWarmup: true }, // excluded
+        { weightKg: 80, reps: 8 },
+        { weightKg: 100, reps: 5 },
+      ]);
+      const r = await service.overview('7d');
+      expect(r.current.workouts).toBe(1);
+      expect(r.current.volumeKg).toBe(80 * 8 + 100 * 5);
+      expect(r.current.reps).toBe(13);
+      expect(r.current.sets).toBe(2);
+      expect(r.current.heaviestKg).toBe(100);
+    });
+
+    it('excludes unfinished sessions', async () => {
+      const running = await sessions.start();
+      const we = await sessions.addExercise(running.id, 'ex-bench');
+      await sessions.replaceSets(running.id, we.exercises[0].id, [
+        { weightKg: 200, reps: 1 },
+      ]);
+      const r = await service.overview('7d');
+      expect(r.current.workouts).toBe(0);
+      expect(r.current.volumeKg).toBe(0);
+      expect(r.current.heaviestKg).toBe(0);
+    });
+
+    it('separates the preceding equal-length window into previous', async () => {
+      await logFinishedSession([{ weightKg: 100, reps: 5 }]); // current, vol 500
+      const prevId = await logFinishedSession([{ weightKg: 50, reps: 10 }]); // vol 500
+      await backdate(prevId, 10); // 7–14 days ago → previous
+      const oldId = await logFinishedSession([{ weightKg: 40, reps: 10 }]);
+      await backdate(oldId, 20); // older than previous window → neither
+
+      const r = await service.overview('7d');
+      expect(r.current.workouts).toBe(1);
+      expect(r.current.volumeKg).toBe(500);
+      expect(r.previous).not.toBeNull();
+      expect(r.previous!.workouts).toBe(1);
+      expect(r.previous!.volumeKg).toBe(500);
+    });
+
+    it('returns previous=null for all-time and includes every finished session', async () => {
+      await logFinishedSession([{ weightKg: 100, reps: 5 }]);
+      const oldId = await logFinishedSession([{ weightKg: 40, reps: 10 }]);
+      await backdate(oldId, 100);
+      const r = await service.overview('all');
+      expect(r.previous).toBeNull();
+      expect(r.current.workouts).toBe(2);
+      expect(r.current.volumeKg).toBe(100 * 5 + 40 * 10);
+    });
+
+    it('cumulativeVolume is non-decreasing and ends at the period volume', async () => {
+      await logFinishedSession([{ weightKg: 100, reps: 5 }]);
+      const r = await service.overview('7d');
+      const vals = r.cumulativeVolume.map((p) => p.value);
+      for (let i = 1; i < vals.length; i++) {
+        expect(vals[i]).toBeGreaterThanOrEqual(vals[i - 1]);
+      }
+      expect(vals.at(-1)).toBe(r.current.volumeKg);
+    });
+
+    it('sums session durations into timeSeconds', async () => {
+      const id = await logFinishedSession([{ weightKg: 100, reps: 5 }]);
+      const start = new Date(Date.now() - 60 * 1000);
+      await prisma.session.update({
+        where: { id },
+        data: {
+          startedAt: start,
+          finishedAt: new Date(start.getTime() + 30 * 60 * 1000),
+        },
+      });
+      const r = await service.overview('7d');
+      expect(r.current.timeSeconds).toBe(30 * 60);
     });
   });
 });

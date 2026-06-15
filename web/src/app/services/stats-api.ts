@@ -51,6 +51,27 @@ export class StatsApi {
   weeklyMuscles(): Observable<WeeklyMuscles> {
     return this.http.get<WeeklyMuscles>('/api/stats/weekly-muscles');
   }
+
+  overview(period: string): Observable<OverviewResult> {
+    const params = new HttpParams().set('period', period);
+    return this.http.get<OverviewResult>('/api/stats/overview', { params });
+  }
+}
+
+export interface OverviewTotals {
+  workouts: number;
+  volumeKg: number;
+  reps: number;
+  sets: number;
+  heaviestKg: number;
+  timeSeconds: number;
+}
+
+export interface OverviewResult {
+  period: string;
+  current: OverviewTotals;
+  previous: OverviewTotals | null;
+  cumulativeVolume: { date: string; value: number }[];
 }
 
 export interface WeeklyMuscles {

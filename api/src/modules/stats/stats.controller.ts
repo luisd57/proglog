@@ -27,4 +27,9 @@ export class StatsController {
   weeklyMuscles() {
     return this.stats.weeklyMuscles();
   }
+
+  @Get('overview')
+  overview(@Query('period') period = '7d') {
+    return this.stats.overview(period);
+  }
 }

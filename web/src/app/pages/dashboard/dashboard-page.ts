@@ -7,11 +7,12 @@ import { muscleHighlights } from '../../components/muscle-diagram/muscle-map';
 import { SessionsApi } from '../../services/sessions-api';
 import { StatsApi } from '../../services/stats-api';
 import { TemplatesApi } from '../../services/templates-api';
+import { OverviewWidget } from './overview-widget';
 
 @Component({
   selector: 'app-dashboard-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MuscleDiagram, RouterLink, DatePipe],
+  imports: [MuscleDiagram, RouterLink, DatePipe, OverviewWidget],
   template: `
     <header class="page-header">
       <h1>ProgLog</h1>
@@ -32,6 +33,8 @@ import { TemplatesApi } from '../../services/templates-api';
         </div>
       }
     </section>
+
+    <app-overview-widget />
 
     <div class="dash-grid">
       <section>

@@ -50,6 +50,30 @@ export interface StrengthLevelsResult {
   levels: StrengthLevelEntry[];
 }
 
+export interface OverviewTotals {
+  workouts: number;
+  volumeKg: number;
+  reps: number;
+  sets: number;
+  heaviestKg: number;
+  timeSeconds: number;
+}
+
+export interface OverviewResult {
+  period: string;
+  current: OverviewTotals;
+  previous: OverviewTotals | null;
+  cumulativeVolume: { date: string; value: number }[];
+}
+
+const PERIOD_DAYS: Record<string, number | null> = {
+  '7d': 7,
+  '30d': 30,
+  '90d': 90,
+  '365d': 365,
+  all: null,
+};
+
 @Injectable()
 export class StatsService {
   constructor(private readonly prisma: PrismaService) {}
@@ -166,6 +190,118 @@ export class StatsService {
       secondary: [...secondary],
       sessionCount: sessionIds.size,
     };
+  }
+
+  async overview(period: string): Promise<OverviewResult> {
+    const resolved = period in PERIOD_DAYS ? period : '7d';
+    const days = PERIOD_DAYS[resolved];
+    const DAY_MS = 24 * 3600 * 1000;
+    const now = Date.now();
+
+    const currentStart = days === null ? new Date(0) : new Date(now - days * DAY_MS);
+    const fetchSince =
+      days === null ? new Date(0) : new Date(now - 2 * days * DAY_MS);
+
+    const sessions = await this.prisma.session.findMany({
+      where: { finishedAt: { not: null }, startedAt: { gte: fetchSince } },
+      include: {
+        exercises: { include: { sets: { where: { isWarmup: false } } } },
+      },
+    });
+
+    const current = sessions.filter((s) => s.startedAt >= currentStart);
+    const previous =
+      days === null
+        ? null
+        : sessions.filter((s) => s.startedAt < currentStart);
+
+    return {
+      period: resolved,
+      current: this.totalsOf(current),
+      previous: previous === null ? null : this.totalsOf(previous),
+      cumulativeVolume: this.cumulativeVolume(current, currentStart, days),
+    };
+  }
+
+  private totalsOf(
+    sessions: {
+      startedAt: Date;
+      finishedAt: Date | null;
+      exercises: { sets: { weightKg: number; reps: number }[] }[];
+    }[],
+  ): OverviewTotals {
+    let volumeKg = 0;
+    let reps = 0;
+    let sets = 0;
+    let heaviestKg = 0;
+    let timeSeconds = 0;
+    for (const s of sessions) {
+      if (s.finishedAt) {
+        timeSeconds += Math.max(
+          0,
+          Math.round((s.finishedAt.getTime() - s.startedAt.getTime()) / 1000),
+        );
+      }
+      for (const se of s.exercises) {
+        for (const set of se.sets) {
+          volumeKg += set.weightKg * set.reps;
+          reps += set.reps;
+          sets += 1;
+          if (set.weightKg > heaviestKg) heaviestKg = set.weightKg;
+        }
+      }
+    }
+    return { workouts: sessions.length, volumeKg, reps, sets, heaviestKg, timeSeconds };
+  }
+
+  // Volume bucketed by server-local calendar day, one running-sum point per day
+  // from the window start (or first session for all-time) through today.
+  private cumulativeVolume(
+    sessions: {
+      startedAt: Date;
+      exercises: { sets: { weightKg: number; reps: number }[] }[];
+    }[],
+    currentStart: Date,
+    days: number | null,
+  ): { date: string; value: number }[] {
+    const dayKey = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+        d.getDate(),
+      ).padStart(2, '0')}`;
+
+    const perDay = new Map<string, number>();
+    for (const s of sessions) {
+      let v = 0;
+      for (const se of s.exercises) {
+        for (const set of se.sets) v += set.weightKg * set.reps;
+      }
+      const key = dayKey(s.startedAt);
+      perDay.set(key, (perDay.get(key) ?? 0) + v);
+    }
+
+    const earliest =
+      days === null
+        ? sessions.length
+          ? new Date(Math.min(...sessions.map((s) => s.startedAt.getTime())))
+          : new Date()
+        : currentStart;
+
+    const cursor = new Date(
+      earliest.getFullYear(),
+      earliest.getMonth(),
+      earliest.getDate(),
+    );
+    const today = new Date();
+    const last = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+    const points: { date: string; value: number }[] = [];
+    let running = 0;
+    while (cursor <= last) {
+      running += perDay.get(dayKey(cursor)) ?? 0;
+      points.push({ date: dayKey(cursor), value: running });
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    return points;
   }
 
   async strengthLevels(): Promise<StrengthLevelsResult> {
