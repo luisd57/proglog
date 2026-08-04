@@ -28,7 +28,7 @@ Memory: keep all auto-memory inline in `MEMORY.md` — one file only, do NOT cre
 - `API/` — Symfony 8 / PHP 8.4 backend, hexagonal (Domain / Application / Infrastructure), Postgres 16 via Doctrine.
 - `web/` — Angular 22, domain-based layout (`<domain>/{feature,ui,data-access,utils}` + `shared/`). Vitest.
 - `docs/api-contract.md` — the API contract. Source of truth for both backend and client.
-- `data/proglog.db` — legacy SQLite data from the retired NestJS backend (gitignored). Keep until the import has been run and verified; migrate via `API/bin/generate-legacy-import.py`.
+- `API/data/legacy-import.sql` — the migrated training history from the retired NestJS backend. Already imported; kept as the only surviving copy (the source `data/proglog.db` was deleted after verification).
 
 Timezone: `Europe/Paris` (`API/docker/php/php.ini`). Timestamps are stored as local wall-clock (`TIMESTAMP WITHOUT TIME ZONE`), which is what the stats day-bucketing expects. Change both the php.ini value and `APP_TZ` in the import script together if you move.
 
@@ -64,16 +64,16 @@ Web tests: `docker compose run --rm web npm test`.
 
 First run on a fresh clone must be `make composer c=install` — until `API/vendor/` exists, every Symfony/Doctrine symbol shows as undefined in the editor.
 
-## Data Migration (one-shot)
+## Data Migration (done)
+
+Ran 2026-08-04. To replay on a fresh database, after `db-migrate` + `seed`:
 
 ```bash
-python3 API/bin/generate-legacy-import.py     # regenerate from data/proglog.db
-# then, after db-migrate + seed:
 docker compose exec -T postgres \
   psql -U proglog_user -d proglog_db < API/data/legacy-import.sql
 ```
 
-Exercise IDs change (cuid → UUID v7), so references re-resolve by name against the seeded catalog. The script refuses to run twice and verifies row counts inside the transaction.
+Exercise IDs changed (cuid → UUID v7), so references re-resolve by name against the seeded catalog. The SQL refuses to run against a non-empty database and verifies row counts inside the transaction. `API/bin/generate-legacy-import.py` regenerated it from `data/proglog.db`, which no longer exists — the SQL is now the only copy.
 
 ## Adding Project-Specific Rules
 
@@ -85,4 +85,6 @@ Stack/architecture conventions go in `.claude/rules/*.md`. Add `paths:` frontmat
 ### Web: restructured to domain layout, adapted to the new contract. `ng build` clean, 53/53 Vitest passing. Dev proxy now wired (`serve.options.proxyConfig`).
 ### Data migration: executed against Postgres — 1 template / 3 lines / 2 sessions / 11 session exercises / 31 sets / 6 measurements. Verified in the browser: history, session detail, measurements, strength, workouts and dashboard all render the imported data, no console errors.
 ### NestJS backend: removed (2026-08-04).
-### TODO before merging to main: delete `data/proglog.db` once you're satisfied with the import. Volume/heaviest stats read 0 until bodyweight loading lands (all legacy sets are bodyweight). Prod packaging (single-container build) was NestJS-specific and was deleted — the dev stack already serves the PWA over LAN, so rebuild it only if you want a prod image.
+### Legacy `data/proglog.db`: deleted (2026-08-04) — history lives on in `API/data/legacy-import.sql`.
+### Known gap: volume/heaviest stats read 0 until bodyweight loading lands (all legacy sets are bodyweight).
+### Note: Prod packaging (single-container build) was NestJS-specific and was deleted — the dev stack already serves the PWA over LAN, so rebuild it only if you want a prod image.
