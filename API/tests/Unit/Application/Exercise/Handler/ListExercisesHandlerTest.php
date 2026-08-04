@@ -61,7 +61,8 @@ final class ListExercisesHandlerTest extends TestCase
 
     public function testSearchTokensStripPunctuationAndShortPluralsAreKept(): void
     {
-        $this->assertSame(['chin', 'up'], ListExercisesHandler::searchTokens('Chin-Ups!'));
+        // split on whitespace only: punctuation is stripped inside a word, not split on
+        $this->assertSame(['chinup'], ListExercisesHandler::searchTokens('Chin-Ups!'));
         $this->assertSame(['front', 'raise'], ListExercisesHandler::searchTokens('front  raises'));
         // "as" is <= 2 chars after cleaning: trailing "s" is kept
         $this->assertSame(['as'], ListExercisesHandler::searchTokens('as'));
