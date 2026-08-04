@@ -1,7 +1,7 @@
 node_modules/
 dist/
 .angular/
-data/
+/data/
 *.db
 *.db-journal
 .env

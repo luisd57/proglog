@@ -1,0 +1,9 @@
+framework:
+    validation:
+        # Constraints are applied to raw request arrays in controllers via
+        # ValidatesRequestTrait - no #[Assert] attributes on DTOs.
+
+when@test:
+    framework:
+        validation:
+            not_compromised_password: false

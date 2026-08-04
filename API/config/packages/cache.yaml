@@ -1,0 +1,4 @@
+framework:
+    cache:
+        # Filesystem "app" cache is enough for a single-user LAN tool
+        # (no Redis - deliberate deviation from the kit).

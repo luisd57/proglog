@@ -1,0 +1,71 @@
+# config/packages/doctrine.yaml
+doctrine:
+    dbal:
+        url: '%env(resolve:DATABASE_URL)%'
+        profiling_collect_backtrace: '%kernel.debug%'
+        types:
+            exercise_id: App\Infrastructure\Persistence\Doctrine\Type\ExerciseIdType
+            workout_template_id: App\Infrastructure\Persistence\Doctrine\Type\WorkoutTemplateIdType
+            template_exercise_id: App\Infrastructure\Persistence\Doctrine\Type\TemplateExerciseIdType
+            session_id: App\Infrastructure\Persistence\Doctrine\Type\SessionIdType
+            session_exercise_id: App\Infrastructure\Persistence\Doctrine\Type\SessionExerciseIdType
+            set_log_id: App\Infrastructure\Persistence\Doctrine\Type\SetLogIdType
+            measurement_id: App\Infrastructure\Persistence\Doctrine\Type\MeasurementIdType
+    orm:
+        validate_xml_mapping: true
+        naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
+        auto_mapping: true
+        mappings:
+            Exercise:
+                type: attribute
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Domain/Exercise/Entity'
+                prefix: 'App\Domain\Exercise\Entity'
+                alias: Exercise
+            Template:
+                type: attribute
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Domain/Template/Entity'
+                prefix: 'App\Domain\Template\Entity'
+                alias: Template
+            Session:
+                type: attribute
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Domain/Session/Entity'
+                prefix: 'App\Domain\Session\Entity'
+                alias: Session
+            Measurement:
+                type: attribute
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Domain/Measurement/Entity'
+                prefix: 'App\Domain\Measurement\Entity'
+                alias: Measurement
+            Profile:
+                type: attribute
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Domain/Profile/Entity'
+                prefix: 'App\Domain\Profile\Entity'
+                alias: Profile
+
+when@test:
+    doctrine:
+        dbal:
+            dbname_suffix: '_test%env(default::TEST_TOKEN)%'
+
+when@prod:
+    doctrine:
+        orm:
+            auto_generate_proxy_classes: false
+            query_cache_driver:
+                type: pool
+                pool: doctrine.system_cache_pool
+            result_cache_driver:
+                type: pool
+                pool: doctrine.result_cache_pool
+    framework:
+        cache:
+            pools:
+                doctrine.result_cache_pool:
+                    adapter: cache.app
+                doctrine.system_cache_pool:
+                    adapter: cache.system

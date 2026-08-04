@@ -1,0 +1,35 @@
+# config/services.yaml
+parameters:
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/Domain/'
+            - '../src/Application/*/DTO/'
+            - '../src/Kernel.php'
+
+    # Domain Interfaces -> Infrastructure Implementations
+    App\Domain\Exercise\Repository\ExerciseRepositoryInterface:
+        class: App\Infrastructure\Persistence\Doctrine\Exercise\Repository\DoctrineExerciseRepository
+
+    App\Domain\Template\Repository\WorkoutTemplateRepositoryInterface:
+        class: App\Infrastructure\Persistence\Doctrine\Template\Repository\DoctrineWorkoutTemplateRepository
+
+    App\Domain\Session\Repository\SessionRepositoryInterface:
+        class: App\Infrastructure\Persistence\Doctrine\Session\Repository\DoctrineSessionRepository
+
+    App\Domain\Measurement\Repository\MeasurementRepositoryInterface:
+        class: App\Infrastructure\Persistence\Doctrine\Measurement\Repository\DoctrineMeasurementRepository
+
+    App\Domain\Profile\Repository\ProfileRepositoryInterface:
+        class: App\Infrastructure\Persistence\Doctrine\Profile\Repository\DoctrineProfileRepository
+
+    # Console commands with specific configuration
+    App\Infrastructure\Console\Exercise\SeedExercisesCommand:
+        arguments:
+            $exercisesDataFile: '%kernel.project_dir%/data/exercises.json'

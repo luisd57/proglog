@@ -2,28 +2,38 @@
 
 Personal strength training tracker — workout splits, session logging, progressive overload stats, strength levels, and body measurements. Single user, self-hosted, everything in Docker.
 
+Symfony 8 (PHP 8.4, hexagonal) + Postgres 16 + Angular 22. No auth by design: it runs on a private network.
+
 ## Run
 
 ```sh
-# first time only: create + seed the database (873 exercises)
-docker compose -f docker-compose.dev.yml run --rm api sh -c "npx prisma migrate deploy && npx prisma db seed"
-
-# production: one container on http://localhost:8080
-docker compose up --build -d
-
-# development: hot reload, web on http://localhost:4200, api on http://localhost:3000
-docker compose -f docker-compose.dev.yml up
+make build up                 # nginx :8080 (API), Angular dev server :4200, Postgres
+make composer c=install       # first time only — creates API/vendor/
+make db-create db-migrate
+make seed                     # 873-exercise catalog, idempotent
 ```
-
-The SQLite database lives in `./data/proglog.db` — back up by copying that file.
 
 ## Tests
 
 ```sh
-docker compose -f docker-compose.dev.yml run --rm api npm test        # API unit (Jest)
-docker compose -f docker-compose.dev.yml run --rm api npm run test:e2e
-docker compose -f docker-compose.dev.yml run --rm web npm test        # Angular (Vitest)
+make test-db-setup            # first time only
+make test                     # PHPUnit — also test-unit / test-integration
+docker compose run --rm web npm test    # Angular (Vitest)
 ```
+
+## Migrating data from the old SQLite backend
+
+The retired NestJS/Prisma backend stored everything in `data/proglog.db`. After
+`db-migrate` and `seed`:
+
+```sh
+python3 API/bin/generate-legacy-import.py    # regenerate API/data/legacy-import.sql
+docker compose exec -T postgres psql -U proglog_user -d proglog_db < API/data/legacy-import.sql
+```
+
+Exercise IDs change (cuid → UUID v7), so references re-resolve by name against the seeded
+catalog. The script refuses to run against a non-empty database and verifies row counts
+inside the transaction.
 
 ## Phone
 

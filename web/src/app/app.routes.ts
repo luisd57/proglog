@@ -5,71 +5,46 @@ export const routes: Routes = [
     path: '',
     pathMatch: 'full',
     loadComponent: () =>
-      import('./pages/dashboard/dashboard-page').then((m) => m.DashboardPage),
+      import('./dashboard/feature/dashboard.page').then((m) => m.DashboardPage),
   },
   {
     path: 'workouts',
-    loadComponent: () =>
-      import('./pages/workouts/workouts-page').then((m) => m.WorkoutsPage),
-  },
-  {
-    path: 'workouts/new',
-    loadComponent: () =>
-      import('./pages/workouts/template-editor-page').then(
-        (m) => m.TemplateEditorPage,
-      ),
-  },
-  {
-    path: 'workouts/:id',
-    loadComponent: () =>
-      import('./pages/workouts/template-editor-page').then(
-        (m) => m.TemplateEditorPage,
+    loadChildren: () =>
+      import('./workouts/feature/workouts-shell.routes').then(
+        (m) => m.workoutsRoutes,
       ),
   },
   {
     path: 'log/:id',
-    loadComponent: () =>
-      import('./pages/log/log-page').then((m) => m.LogPage),
+    loadComponent: () => import('./log/feature/log.page').then((m) => m.LogPage),
   },
   {
     path: 'history',
     loadComponent: () =>
-      import('./pages/history/history-page').then((m) => m.HistoryPage),
+      import('./history/feature/history.page').then((m) => m.HistoryPage),
   },
   {
     path: 'strength',
     loadComponent: () =>
-      import('./pages/strength/strength-page').then((m) => m.StrengthPage),
+      import('./strength/feature/strength.page').then((m) => m.StrengthPage),
   },
   {
     path: 'measurements',
     loadComponent: () =>
-      import('./pages/measurements/measurements-page').then(
+      import('./measurements/feature/measurements.page').then(
         (m) => m.MeasurementsPage,
       ),
   },
   {
     path: 'settings',
     loadComponent: () =>
-      import('./pages/settings/settings-page').then((m) => m.SettingsPage),
+      import('./settings/feature/settings.page').then((m) => m.SettingsPage),
   },
   {
     path: 'exercises',
-    loadComponent: () =>
-      import('./pages/exercises/exercises-page').then((m) => m.ExercisesPage),
-  },
-  {
-    path: 'exercises/new',
-    loadComponent: () =>
-      import('./pages/exercises/exercise-new-page').then(
-        (m) => m.ExerciseNewPage,
-      ),
-  },
-  {
-    path: 'exercises/:id',
-    loadComponent: () =>
-      import('./pages/exercises/exercise-detail-page').then(
-        (m) => m.ExerciseDetailPage,
+    loadChildren: () =>
+      import('./exercises/feature/exercises-shell.routes').then(
+        (m) => m.exercisesRoutes,
       ),
   },
 ];

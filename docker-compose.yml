@@ -1,12 +1,73 @@
+# Dev stack: Symfony API (nginx :8080) + Angular dev server (:4200) + Postgres.
+# nginx binds 0.0.0.0 so the PWA is reachable over LAN/Tailscale.
 name: proglog
 
 services:
-  app:
-    build: .
-    ports:
-      - "8080:3000"
-    environment:
-      DATABASE_URL: file:/data/proglog.db
+  php:
+    build:
+      context: ./API
+      dockerfile: docker/php/Dockerfile
+    container_name: proglog_php
     volumes:
-      - ./data:/data
-    restart: unless-stopped
+      - ./API:/var/www/html
+      - ./API/docker/php/php.ini:/usr/local/etc/php/conf.d/custom.ini
+      - php_vendor:/var/www/html/vendor
+      - php_var:/var/www/html/var
+    depends_on:
+      - postgres
+    networks:
+      - proglog_network
+    environment:
+      - APP_ENV=dev
+      - DATABASE_URL=postgresql://proglog_user:proglog_pass@postgres:5432/proglog_db?serverVersion=16&charset=utf8
+
+  nginx:
+    image: nginx:alpine
+    container_name: proglog_nginx
+    ports:
+      # Bound to 0.0.0.0 on purpose: the PWA is used from phones on the LAN.
+      - "0.0.0.0:8080:80"
+    volumes:
+      - ./API:/var/www/html
+      - ./API/docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php
+    networks:
+      - proglog_network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: proglog_postgres
+    environment:
+      POSTGRES_DB: proglog_db
+      POSTGRES_USER: proglog_user
+      POSTGRES_PASSWORD: proglog_pass
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - proglog_network
+
+  web:
+    image: node:22-alpine
+    container_name: proglog_web
+    working_dir: /app
+    volumes:
+      - ./web:/app
+      - web_node_modules:/app/node_modules
+    ports:
+      - "0.0.0.0:4200:4200"
+    command: sh -c "npm install && npx ng serve --host 0.0.0.0 --poll 2000"
+    networks:
+      - proglog_network
+
+networks:
+  proglog_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  web_node_modules:
+  php_vendor:
+  php_var:
