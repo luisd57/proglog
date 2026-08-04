@@ -16,6 +16,7 @@ Infrastructure → Application → Domain (never the reverse)
 
 - ORM attributes (`#[ORM\...]`) live directly on Domain entities. No separate mapping layer (XML/annotations-elsewhere) — we don't plan to swap ORMs.
 - NO Doctrine relation attributes (`OneToMany`, `ManyToOne`, `mappedBy`, `inversedBy`). Entities reference other aggregates by ID value objects; repositories resolve them. Never introduce bidirectional mappings.
+- This is an ORM-mapping rule, NOT a schema rule. Migrations still declare `FOREIGN KEY` constraints with explicit `ON DELETE CASCADE` / `SET NULL`: referential integrity belongs in the database, and hand-rolled cascades in repositories fail silently when they miss a row.
 - VO persistence: single-column VO → custom DBAL type extending the NEAREST base type (e.g. `GuidType`), with `public const string NAME`. Multi-field VO → `#[ORM\Embeddable]` on the VO + `#[ORM\Embedded(columnPrefix: false)]` on the entity, and the `ValueObject/` dir registered as its own doctrine.yaml mapping entry.
 - ORM attributes go on promoted constructor params for immutable fields; mutable state is declared as class properties.
 

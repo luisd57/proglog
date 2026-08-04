@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Template\Repository;
 
+use App\Domain\Exercise\Id\ExerciseId;
 use App\Domain\Template\Entity\TemplateExercise;
 use App\Domain\Template\Entity\WorkoutTemplate;
 use App\Domain\Template\Id\WorkoutTemplateId;
@@ -43,6 +44,12 @@ interface WorkoutTemplateRepositoryInterface
     public function countExercisesByTemplateId(WorkoutTemplateId $workoutTemplateId): int;
 
     /**
+     * Lines referencing an exercise, across all templates (referential guard
+     * before deleting a custom exercise).
+     */
+    public function countExercisesByExerciseId(ExerciseId $exerciseId): int;
+
+    /**
      * Bulk add with a single flush.
      *
      * @param ArrayCollection<int, TemplateExercise> $templateExercises
@@ -53,8 +60,8 @@ interface WorkoutTemplateRepositoryInterface
 
     /**
      * Deletes the template together with its exercise lines (aggregate
-     * cascade; the schema has no FKs). Detaching sessions that reference the
-     * template is orchestrated in the handler.
+     * cascade, with an ON DELETE CASCADE FK as the backstop). Detaching
+     * sessions that reference the template is orchestrated in the handler.
      */
     public function delete(WorkoutTemplate $workoutTemplate): void;
 }

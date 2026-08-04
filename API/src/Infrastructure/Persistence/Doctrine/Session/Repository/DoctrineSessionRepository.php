@@ -135,6 +135,17 @@ final class DoctrineSessionRepository implements SessionRepositoryInterface
         return (int) $qb->getQuery()->getSingleScalarResult();
     }
 
+    public function countExercisesByExerciseId(ExerciseId $exerciseId): int
+    {
+        $qb = $this->entityManager->createQueryBuilder();
+        $qb->select('COUNT(se.id)')
+            ->from(SessionExercise::class, 'se')
+            ->where('se.exerciseId = :exerciseId')
+            ->setParameter('exerciseId', $exerciseId->getValue());
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
+    }
+
     public function countSetsBySessionId(SessionId $sessionId): int
     {
         $qb = $this->entityManager->createQueryBuilder();

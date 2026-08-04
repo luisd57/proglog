@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Persistence\Doctrine\Template\Repository;
 
+use App\Domain\Exercise\Id\ExerciseId;
 use App\Domain\Template\Entity\TemplateExercise;
 use App\Domain\Template\Entity\WorkoutTemplate;
 use App\Domain\Template\Id\WorkoutTemplateId;
@@ -79,6 +80,17 @@ final class DoctrineWorkoutTemplateRepository implements WorkoutTemplateReposito
             ->from(TemplateExercise::class, 'te')
             ->where('te.workoutTemplateId = :templateId')
             ->setParameter('templateId', $workoutTemplateId->getValue());
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
+    }
+
+    public function countExercisesByExerciseId(ExerciseId $exerciseId): int
+    {
+        $qb = $this->entityManager->createQueryBuilder();
+        $qb->select('COUNT(te.id)')
+            ->from(TemplateExercise::class, 'te')
+            ->where('te.exerciseId = :exerciseId')
+            ->setParameter('exerciseId', $exerciseId->getValue());
 
         return (int) $qb->getQuery()->getSingleScalarResult();
     }

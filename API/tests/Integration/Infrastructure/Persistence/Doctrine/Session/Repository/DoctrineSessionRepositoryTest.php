@@ -18,16 +18,32 @@ final class DoctrineSessionRepositoryTest extends IntegrationTestCase
 {
     private SessionRepositoryInterface $repository;
 
+    /**
+     * Real parent rows: session_exercises.exercise_id and sessions.template_id
+     * are FK-constrained, so fixtures cannot invent ids for them.
+     */
+    private ExerciseId $exerciseId;
+    private WorkoutTemplateId $workoutTemplateId;
+
     protected function setUp(): void
     {
         parent::setUp();
         $this->repository = self::getContainer()->get(SessionRepositoryInterface::class);
+
+        $exercise = DomainTestHelper::createBuiltInExercise(name: 'Session Repository Fixture');
+        $workoutTemplate = DomainTestHelper::createWorkoutTemplate(name: 'Session Repository Template');
+        $this->entityManager->persist($exercise);
+        $this->entityManager->persist($workoutTemplate);
+        $this->entityManager->flush();
+
+        $this->exerciseId = $exercise->getId();
+        $this->workoutTemplateId = $workoutTemplate->getId();
     }
 
     public function testSaveAndFindByIdRoundTrips(): void
     {
         $id = SessionId::generate();
-        $workoutTemplateId = WorkoutTemplateId::generate();
+        $workoutTemplateId = $this->workoutTemplateId;
         $session = DomainTestHelper::createSession(
             id: $id,
             workoutTemplateId: $workoutTemplateId,
@@ -89,7 +105,7 @@ final class DoctrineSessionRepositoryTest extends IntegrationTestCase
 
     public function testFindByTemplateIdReturnsOnlyReferencingSessions(): void
     {
-        $workoutTemplateId = WorkoutTemplateId::generate();
+        $workoutTemplateId = $this->workoutTemplateId;
         $referencing = DomainTestHelper::createSession(workoutTemplateId: $workoutTemplateId);
         $blank = DomainTestHelper::createSession();
 
@@ -107,8 +123,8 @@ final class DoctrineSessionRepositoryTest extends IntegrationTestCase
         $session = DomainTestHelper::createSession();
         $this->repository->save($session);
 
-        $second = DomainTestHelper::createSessionExercise(sessionId: $session->getId(), sortOrder: 1);
-        $first = DomainTestHelper::createSessionExercise(sessionId: $session->getId(), sortOrder: 0);
+        $second = DomainTestHelper::createSessionExercise(exerciseId: $this->exerciseId, sessionId: $session->getId(), sortOrder: 1);
+        $first = DomainTestHelper::createSessionExercise(exerciseId: $this->exerciseId, sessionId: $session->getId(), sortOrder: 0);
         $this->repository->addExercises(new ArrayCollection([$second, $first]));
         $this->entityManager->clear();
 
@@ -125,7 +141,7 @@ final class DoctrineSessionRepositoryTest extends IntegrationTestCase
     {
         $session = DomainTestHelper::createSession();
         $this->repository->save($session);
-        $sessionExercise = DomainTestHelper::createSessionExercise(sessionId: $session->getId());
+        $sessionExercise = DomainTestHelper::createSessionExercise(exerciseId: $this->exerciseId, sessionId: $session->getId());
         $this->repository->saveExercise($sessionExercise);
 
         $this->repository->replaceSets($sessionExercise->getId(), new ArrayCollection([
@@ -151,7 +167,7 @@ final class DoctrineSessionRepositoryTest extends IntegrationTestCase
     {
         $session = DomainTestHelper::createSession();
         $this->repository->save($session);
-        $sessionExercise = DomainTestHelper::createSessionExercise(sessionId: $session->getId());
+        $sessionExercise = DomainTestHelper::createSessionExercise(exerciseId: $this->exerciseId, sessionId: $session->getId());
         $this->repository->saveExercise($sessionExercise);
         $this->repository->replaceSets($sessionExercise->getId(), new ArrayCollection([
             DomainTestHelper::createSetLog(sessionExerciseId: $sessionExercise->getId()),
@@ -166,7 +182,7 @@ final class DoctrineSessionRepositoryTest extends IntegrationTestCase
     {
         $session = DomainTestHelper::createSession();
         $this->repository->save($session);
-        $sessionExercise = DomainTestHelper::createSessionExercise(sessionId: $session->getId());
+        $sessionExercise = DomainTestHelper::createSessionExercise(exerciseId: $this->exerciseId, sessionId: $session->getId());
         $this->repository->saveExercise($sessionExercise);
         $this->repository->replaceSets($sessionExercise->getId(), new ArrayCollection([
             DomainTestHelper::createSetLog(sessionExerciseId: $sessionExercise->getId()),
@@ -182,7 +198,7 @@ final class DoctrineSessionRepositoryTest extends IntegrationTestCase
     {
         $session = DomainTestHelper::createSession();
         $this->repository->save($session);
-        $sessionExercise = DomainTestHelper::createSessionExercise(sessionId: $session->getId());
+        $sessionExercise = DomainTestHelper::createSessionExercise(exerciseId: $this->exerciseId, sessionId: $session->getId());
         $this->repository->saveExercise($sessionExercise);
         $this->repository->replaceSets($sessionExercise->getId(), new ArrayCollection([
             DomainTestHelper::createSetLog(sessionExerciseId: $sessionExercise->getId()),
@@ -197,7 +213,7 @@ final class DoctrineSessionRepositoryTest extends IntegrationTestCase
 
     public function testFindLatestFinishedExercisePicksMostRecentFinishedSessionExcludingGiven(): void
     {
-        $exerciseId = ExerciseId::generate();
+        $exerciseId = $this->exerciseId;
 
         $olderFinished = DomainTestHelper::createSession(
             startedAt: new \DateTimeImmutable('2026-08-01 10:00:00'),
@@ -237,7 +253,7 @@ final class DoctrineSessionRepositoryTest extends IntegrationTestCase
 
     public function testFindLatestFinishedExerciseExcludesTheGivenSessionItself(): void
     {
-        $exerciseId = ExerciseId::generate();
+        $exerciseId = $this->exerciseId;
         $onlyFinished = DomainTestHelper::createSession(
             startedAt: new \DateTimeImmutable('2026-08-01 10:00:00'),
             finishedAt: new \DateTimeImmutable('2026-08-01 11:00:00'),
@@ -255,7 +271,7 @@ final class DoctrineSessionRepositoryTest extends IntegrationTestCase
 
     public function testFindLatestFinishedExerciseIgnoresUnfinishedSessions(): void
     {
-        $exerciseId = ExerciseId::generate();
+        $exerciseId = $this->exerciseId;
         $unfinished = DomainTestHelper::createSession(
             startedAt: new \DateTimeImmutable('2026-08-03 10:00:00'),
         );
