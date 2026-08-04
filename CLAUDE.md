@@ -83,6 +83,6 @@ Stack/architecture conventions go in `.claude/rules/*.md`. Add `paths:` frontmat
 
 ### Symfony API (`API/`): all 6 domains ported (exercises, templates, sessions, measurements, profile, stats). Booted, migrated, seeded (873 exercises); 408/408 PHPUnit green; endpoints smoke-tested against the contract (2026-08-04).
 ### Web: restructured to domain layout, adapted to the new contract. `ng build` clean, 53/53 Vitest passing. Dev proxy now wired (`serve.options.proxyConfig`).
-### Data migration: executed against Postgres — 1 template / 3 lines / 2 sessions / 11 session exercises / 31 sets / 6 measurements; all UI endpoints return the imported data. UI not yet eyeballed in a browser.
+### Data migration: executed against Postgres — 1 template / 3 lines / 2 sessions / 11 session exercises / 31 sets / 6 measurements. Verified in the browser: history, session detail, measurements, strength, workouts and dashboard all render the imported data, no console errors.
 ### NestJS backend: removed (2026-08-04).
-### TODO before merging to main: open the PWA and eyeball history/measurements/stats, then delete `data/proglog.db`. Volume/heaviest stats read 0 until bodyweight loading lands (all legacy sets are bodyweight). Prod packaging (single-container build) was NestJS-specific and was deleted — the dev stack already serves the PWA over LAN, so rebuild it only if you want a prod image.
+### TODO before merging to main: delete `data/proglog.db` once you're satisfied with the import. Volume/heaviest stats read 0 until bodyweight loading lands (all legacy sets are bodyweight). Prod packaging (single-container build) was NestJS-specific and was deleted — the dev stack already serves the PWA over LAN, so rebuild it only if you want a prod image.
