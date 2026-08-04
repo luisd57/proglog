@@ -16,10 +16,12 @@ final class Version20260804000002 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        // No FKs (kit rule): children reference their parents by plain UUID
-        // columns. Old Prisma semantics are enforced in repositories/handlers:
+        // Children reference their parents by plain UUID columns (no ORM
+        // relations). Old Prisma semantics are enforced in repositories/handlers:
         // deleting a session cascades to its exercises and sets; deleting a
         // template sets sessions.template_id to NULL.
+        // The matching FK constraints are added in Version20260805000000 - this
+        // migration predates them and is left as it ran.
         $this->addSql('CREATE TABLE sessions (
             id UUID NOT NULL,
             template_id UUID DEFAULT NULL,

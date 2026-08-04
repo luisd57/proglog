@@ -15,6 +15,7 @@ use App\Application\Exercise\Handler\ListExercisesHandler;
 use App\Application\Exercise\Handler\UpdateExerciseHandler;
 use App\Domain\Exercise\Exception\BuiltInExerciseImmutableException;
 use App\Domain\Exercise\Exception\DuplicateExerciseNameException;
+use App\Domain\Exercise\Exception\ExerciseInUseException;
 use App\Domain\Exercise\Exception\ExerciseNotFoundException;
 use App\Infrastructure\Http\Controller\ApiResponseTrait;
 use App\Infrastructure\Http\Controller\ValidatesRequestTrait;
@@ -145,7 +146,7 @@ final class ExerciseController extends AbstractController
             return $this->noContent();
         } catch (ExerciseNotFoundException $exception) {
             return $this->error($exception->getMessage(), $exception->getErrorCode(), 404);
-        } catch (BuiltInExerciseImmutableException $exception) {
+        } catch (BuiltInExerciseImmutableException|ExerciseInUseException $exception) {
             return $this->error($exception->getMessage(), $exception->getErrorCode(), 409);
         } catch (\InvalidArgumentException $exception) {
             return $this->validationError(['id' => $exception->getMessage()]);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\Infrastructure\Persistence\Doctrine\Template\Repository;
 
+use App\Domain\Exercise\Id\ExerciseId;
 use App\Domain\Template\Entity\TemplateExercise;
 use App\Domain\Template\Id\WorkoutTemplateId;
 use App\Domain\Template\Repository\WorkoutTemplateRepositoryInterface;
@@ -15,10 +16,22 @@ final class DoctrineWorkoutTemplateRepositoryTest extends IntegrationTestCase
 {
     private WorkoutTemplateRepositoryInterface $repository;
 
+    /**
+     * Real parent row: template_exercises.exercise_id is FK-constrained, so
+     * fixtures cannot invent an id for it.
+     */
+    private ExerciseId $exerciseId;
+
     protected function setUp(): void
     {
         parent::setUp();
         $this->repository = self::getContainer()->get(WorkoutTemplateRepositoryInterface::class);
+
+        $exercise = DomainTestHelper::createBuiltInExercise(name: 'Template Repository Fixture');
+        $this->entityManager->persist($exercise);
+        $this->entityManager->flush();
+
+        $this->exerciseId = $exercise->getId();
     }
 
     public function testSaveAndFindByIdRoundTrips(): void
@@ -86,10 +99,12 @@ final class DoctrineWorkoutTemplateRepositoryTest extends IntegrationTestCase
 
         $this->repository->addExercises(new ArrayCollection([
             DomainTestHelper::createTemplateExercise(
+                exerciseId: $this->exerciseId,
                 workoutTemplateId: $workoutTemplate->getId(),
                 sortOrder: 1,
             ),
             DomainTestHelper::createTemplateExercise(
+                exerciseId: $this->exerciseId,
                 workoutTemplateId: $workoutTemplate->getId(),
                 sortOrder: 0,
                 targetSets: 3,
@@ -118,8 +133,8 @@ final class DoctrineWorkoutTemplateRepositoryTest extends IntegrationTestCase
         $this->repository->save($workoutTemplate);
         $this->repository->save($otherTemplate);
         $this->repository->addExercises(new ArrayCollection([
-            DomainTestHelper::createTemplateExercise(workoutTemplateId: $workoutTemplate->getId()),
-            DomainTestHelper::createTemplateExercise(workoutTemplateId: $otherTemplate->getId()),
+            DomainTestHelper::createTemplateExercise(exerciseId: $this->exerciseId, workoutTemplateId: $workoutTemplate->getId()),
+            DomainTestHelper::createTemplateExercise(exerciseId: $this->exerciseId, workoutTemplateId: $otherTemplate->getId()),
         ]));
 
         $this->assertCount(1, $this->repository->findExercisesByTemplateId($workoutTemplate->getId()));
@@ -130,8 +145,8 @@ final class DoctrineWorkoutTemplateRepositoryTest extends IntegrationTestCase
         $workoutTemplate = DomainTestHelper::createWorkoutTemplate();
         $this->repository->save($workoutTemplate);
         $this->repository->addExercises(new ArrayCollection([
-            DomainTestHelper::createTemplateExercise(workoutTemplateId: $workoutTemplate->getId(), sortOrder: 0),
-            DomainTestHelper::createTemplateExercise(workoutTemplateId: $workoutTemplate->getId(), sortOrder: 1),
+            DomainTestHelper::createTemplateExercise(exerciseId: $this->exerciseId, workoutTemplateId: $workoutTemplate->getId(), sortOrder: 0),
+            DomainTestHelper::createTemplateExercise(exerciseId: $this->exerciseId, workoutTemplateId: $workoutTemplate->getId(), sortOrder: 1),
         ]));
 
         $this->repository->deleteExercisesByTemplateId($workoutTemplate->getId());
@@ -144,7 +159,7 @@ final class DoctrineWorkoutTemplateRepositoryTest extends IntegrationTestCase
         $workoutTemplate = DomainTestHelper::createWorkoutTemplate();
         $this->repository->save($workoutTemplate);
         $this->repository->addExercises(new ArrayCollection([
-            DomainTestHelper::createTemplateExercise(workoutTemplateId: $workoutTemplate->getId()),
+            DomainTestHelper::createTemplateExercise(exerciseId: $this->exerciseId, workoutTemplateId: $workoutTemplate->getId()),
         ]));
 
         $this->repository->delete($workoutTemplate);

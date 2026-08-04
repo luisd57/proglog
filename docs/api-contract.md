@@ -23,8 +23,9 @@ listed. All endpoints prefixed `/api`.
   malformed UUID) 422 · success 200 · created 201 · deleted 204 (empty body, no envelope).
 - **Route names**: `api_*` snake_case, listed per endpoint.
 - **Error codes**: `VALIDATION_ERROR`, `NOT_FOUND`, `EXERCISE_NOT_FOUND`,
-  `DUPLICATE_EXERCISE_NAME`, `BUILT_IN_EXERCISE_IMMUTABLE`, `TEMPLATE_NOT_FOUND`,
-  `SESSION_NOT_FOUND`, `SESSION_EXERCISE_NOT_FOUND`, `MEASUREMENT_NOT_FOUND`.
+  `DUPLICATE_EXERCISE_NAME`, `BUILT_IN_EXERCISE_IMMUTABLE`, `EXERCISE_IN_USE`,
+  `TEMPLATE_NOT_FOUND`, `SESSION_NOT_FOUND`, `SESSION_EXERCISE_NOT_FOUND`,
+  `MEASUREMENT_NOT_FOUND`.
 - **No auth** of any kind (deliberate: single-user LAN tool).
 - **No pagination anywhere** — the old API paginates nothing (the exercises list filters
   but returns the full result set; catalog is ~870 rows). Deliberate.
@@ -123,7 +124,9 @@ Same field rules as create (if provided).
 409 `DUPLICATE_EXERCISE_NAME` · 422
 
 ### DELETE /api/exercises/{id} — `api_exercises_delete`
-Only custom exercises. 204 · 404 · 409 `BUILT_IN_EXERCISE_IMMUTABLE` · 422
+Only custom exercises, and only when unreferenced: an exercise used by any template line
+or logged session exercise is refused (the FK is RESTRICT; the handler checks first).
+204 · 404 · 409 `BUILT_IN_EXERCISE_IMMUTABLE` · 409 `EXERCISE_IN_USE` · 422
 
 ---
 
@@ -432,9 +435,16 @@ only if no sessions) through today inclusive.
   Exercise slice in `API/src/` (reference implementation).
 - Entities reference other aggregates by ID value objects only (TemplateExercise →
   ExerciseId, SessionExercise → SessionId + ExerciseId, SetLog → SessionExerciseId);
-  no Doctrine relations. The migrations create NO foreign keys at all; cascade deletes
-  (template exercises, session exercises, sets) are enforced in the repositories, and
-  template-delete → `session.template_id = NULL` is orchestrated in the handler.
+  no Doctrine relations. That is an ORM-mapping choice, not a schema one: the migrations
+  DO declare foreign keys, and the repositories/handlers still perform the cascade in PHP
+  (keeping the identity map consistent) with the constraint as the database-level backstop.
+  - `template_exercises.template_id` → `workout_templates` CASCADE
+  - `session_exercises.session_id` → `sessions` CASCADE
+  - `set_logs.session_exercise_id` → `session_exercises` CASCADE
+  - `sessions.template_id` → `workout_templates` SET NULL (orchestrated in
+    `DeleteTemplateHandler`)
+  - `template_exercises.exercise_id` / `session_exercises.exercise_id` → `exercises`
+    RESTRICT; `DeleteExerciseHandler` guards this first and returns 409 `EXERCISE_IN_USE`.
 - Time: inject `Symfony\Component\Clock\ClockInterface` into handlers
   (`started_at`, `finished_at`, `measured_at`, stats windows); entities receive `$now`.
 - `weight_kg`, `value`, `height_cm` are floats (DOUBLE PRECISION); `reps`, counts and

@@ -17,8 +17,9 @@ use Doctrine\Common\Collections\ArrayCollection;
  * Repository for the Session aggregate (session + its exercises + their
  * sets). Children have no Doctrine relations to their parents: they are
  * loaded by parent id and composed by the application layer. Cascade deletes
- * (Prisma onDelete: Cascade in the old schema) are enforced here because the
- * schema has no FKs.
+ * (Prisma onDelete: Cascade in the old schema) are enforced here so the ORM's
+ * identity map stays consistent; the matching FK constraints are the
+ * database-level backstop.
  */
 interface SessionRepositoryInterface
 {
@@ -66,6 +67,12 @@ interface SessionRepositoryInterface
     public function findExercisesBySessionId(SessionId $sessionId): ArrayCollection;
 
     public function countExercisesBySessionId(SessionId $sessionId): int;
+
+    /**
+     * Session-exercise entries referencing an exercise, across all sessions
+     * (referential guard before deleting a custom exercise).
+     */
+    public function countExercisesByExerciseId(ExerciseId $exerciseId): int;
 
     public function countSetsBySessionId(SessionId $sessionId): int;
 

@@ -199,4 +199,54 @@ final class ExerciseControllerTest extends ApiTestCase
         $data = $this->getResponseData();
         $this->assertSame('BUILT_IN_EXERCISE_IMMUTABLE', $data['error']['code']);
     }
+
+    public function testDeleteExerciseUsedByTemplateReturns409(): void
+    {
+        $this->jsonRequest('POST', '/api/exercises', [
+            'name' => 'Referenced Custom Press',
+            'primary_muscles' => ['chest'],
+        ]);
+        $this->assertResponseStatusCodeSame(201);
+        $exerciseId = $this->getResponseData()['data']['exercise']['id'];
+
+        $this->jsonRequest('POST', '/api/templates', [
+            'name' => 'Uses The Custom Exercise',
+            'exercises' => [['exercise_id' => $exerciseId]],
+        ]);
+        $this->assertResponseStatusCodeSame(201);
+
+        $this->jsonRequest('DELETE', '/api/exercises/' . $exerciseId);
+
+        $this->assertResponseStatusCodeSame(409);
+        $data = $this->getResponseData();
+        $this->assertSame('EXERCISE_IN_USE', $data['error']['code']);
+
+        // still there
+        $this->jsonRequest('GET', '/api/exercises/' . $exerciseId);
+        $this->assertResponseStatusCodeSame(200);
+    }
+
+    public function testDeleteExerciseUsedByLoggedSessionReturns409(): void
+    {
+        $this->jsonRequest('POST', '/api/exercises', [
+            'name' => 'Logged Custom Press',
+            'primary_muscles' => ['chest'],
+        ]);
+        $this->assertResponseStatusCodeSame(201);
+        $exerciseId = $this->getResponseData()['data']['exercise']['id'];
+
+        $this->jsonRequest('POST', '/api/sessions', []);
+        $this->assertResponseStatusCodeSame(201);
+        $sessionId = $this->getResponseData()['data']['session']['id'];
+
+        $this->jsonRequest('POST', "/api/sessions/{$sessionId}/exercises", [
+            'exercise_id' => $exerciseId,
+        ]);
+        $this->assertResponseStatusCodeSame(200);
+
+        $this->jsonRequest('DELETE', '/api/exercises/' . $exerciseId);
+
+        $this->assertResponseStatusCodeSame(409);
+        $this->assertSame('EXERCISE_IN_USE', $this->getResponseData()['error']['code']);
+    }
 }
