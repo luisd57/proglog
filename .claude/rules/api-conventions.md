@@ -43,8 +43,8 @@ paths:
 - Input DTOs: `DTO/Input/`, suffixed `InputDTO`
 - Output DTOs: `DTO/Output/`, suffixed `OutputDTO`
 - All DTOs are `final readonly class`
-- Every Output DTO has `toArray()`. Entity-backed ones also get a static `fromEntity()`
-- A DTO built from computed results, or needing repositories to compose, is assembled by its handler or an Application Service (`SessionAssembler`) instead. Don't add a factory that only aliases the constructor
+- Name the static factory for what it maps: `fromEntity()` from a single entity, `fromValueObject()` from a VO. A DTO built from computed results, or needing repositories to compose, is assembled by its handler or an Application Service — don't add a factory that only aliases the constructor
+- `toArray()` on every Output DTO that goes into a response. Omit it on internal carriers the controller destructures — e.g. an auth result whose token goes to an httpOnly cookie, not the body
 
 ## Value Objects
 - Static factories: `fromString()`, `create()`, `generate()`
