@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Domain\Stats\Service;
 
+use App\Domain\Stats\Parameter\LiftStandard;
+use App\Domain\Stats\Parameter\StandardRow;
 use App\Domain\Stats\Service\StrengthStandards;
-use App\Domain\Stats\ValueObject\LiftStandard;
-use App\Domain\Stats\ValueObject\StandardRow;
 use PHPUnit\Framework\TestCase;
 
 final class StrengthStandardsTest extends TestCase

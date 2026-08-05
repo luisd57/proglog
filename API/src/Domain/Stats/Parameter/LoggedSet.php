@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Stats\ValueObject;
+namespace App\Domain\Stats\Parameter;
 
 /**
  * Minimal set line the stats calculators work on (decouples them from the

@@ -23,19 +23,12 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api/exercises')]
 final class ExerciseController extends AbstractController
 {
     use ApiResponseTrait;
     use ValidatesRequestTrait;
-
-    public function __construct(
-        private readonly ValidatorInterface $validator,
-    ) {
-    }
 
     #[Route('', name: 'api_exercises_list', methods: ['GET'])]
     public function list(Request $request, ListExercisesHandler $handler): JsonResponse
@@ -174,14 +167,8 @@ final class ExerciseController extends AbstractController
 
             if (!is_string($name) || trim($name) === '') {
                 $errors['name'] = 'Name is required';
-            } else {
-                $nameViolations = $this->validator->validate($name, [
-                    new Assert\Length(max: 255, maxMessage: 'Name must be at most 255 characters'),
-                ]);
-
-                if (count($nameViolations) > 0) {
-                    $errors['name'] = (string) $nameViolations[0]->getMessage();
-                }
+            } elseif (mb_strlen($name) > 255) {
+                $errors['name'] = 'Name must be at most 255 characters';
             }
         }
 

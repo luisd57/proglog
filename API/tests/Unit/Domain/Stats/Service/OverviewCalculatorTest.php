@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Domain\Stats\Service;
 
+use App\Domain\Stats\Parameter\LoggedSet;
+use App\Domain\Stats\Parameter\SessionActivity;
+use App\Domain\Stats\Result\CumulativeVolumePoint;
 use App\Domain\Stats\Service\OverviewCalculator;
-use App\Domain\Stats\ValueObject\CumulativeVolumePoint;
-use App\Domain\Stats\ValueObject\LoggedSet;
-use App\Domain\Stats\ValueObject\SessionActivity;
 use PHPUnit\Framework\TestCase;
 
 final class OverviewCalculatorTest extends TestCase

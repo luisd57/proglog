@@ -4,10 +4,8 @@ import { rxResource } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { ChartPoint, LineChartComponent } from '../../shared/ui/line-chart/line-chart.component';
-import {
-  MEASUREMENT_LABELS,
-  MeasurementsService,
-} from '../../shared/data-access/measurements.service';
+import { MeasurementsService } from '../../shared/data-access/measurements.service';
+import { MEASUREMENT_LABELS } from '../../shared/utils/measurement.model';
 import { estimateNavyBodyFat } from '../utils/body-fat';
 
 @Component({

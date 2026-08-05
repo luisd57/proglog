@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Stats\ValueObject;
+namespace App\Domain\Stats\Parameter;
 
 /**
  * One bodyweight row of a strength-standards table.

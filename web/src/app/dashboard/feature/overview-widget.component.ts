@@ -8,7 +8,8 @@ import {
 } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { ChartPoint, LineChartComponent } from '../../shared/ui/line-chart/line-chart.component';
-import { OverviewResult, StatsService } from '../../shared/data-access/stats.service';
+import { StatsService } from '../../shared/data-access/stats.service';
+import { OverviewResult } from '../../shared/utils/stats.model';
 import { delta, formatDuration } from '../utils/overview';
 
 interface StatCell {

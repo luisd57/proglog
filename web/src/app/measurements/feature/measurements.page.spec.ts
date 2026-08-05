@@ -5,7 +5,7 @@ import {
 } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { Measurement, Profile } from '../../shared/data-access/measurements.service';
+import { Measurement, Profile } from '../../shared/utils/measurement.model';
 import { MeasurementsPage } from './measurements.page';
 
 function latestEnvelope(latest: Record<string, number>) {

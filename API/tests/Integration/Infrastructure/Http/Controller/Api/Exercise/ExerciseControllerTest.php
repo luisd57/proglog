@@ -132,6 +132,29 @@ final class ExerciseControllerTest extends ApiTestCase
         $this->assertArrayHasKey('name', $data['error']['details']);
     }
 
+    public function testCreateRejectsNameLongerThan255(): void
+    {
+        $this->jsonRequest('POST', '/api/exercises', [
+            'name' => str_repeat('a', 256),
+            'primary_muscles' => ['chest'],
+        ]);
+
+        $this->assertResponseStatusCodeSame(422);
+        $data = $this->getResponseData();
+        $this->assertSame('VALIDATION_ERROR', $data['error']['code']);
+        $this->assertSame('Name must be at most 255 characters', $data['error']['details']['name']);
+    }
+
+    public function testCreateAcceptsNameOfExactly255(): void
+    {
+        $this->jsonRequest('POST', '/api/exercises', [
+            'name' => str_repeat('a', 255),
+            'primary_muscles' => ['chest'],
+        ]);
+
+        $this->assertResponseStatusCodeSame(201);
+    }
+
     public function testCreateRejectsEmptyPrimaryMuscles(): void
     {
         $this->jsonRequest('POST', '/api/exercises', [

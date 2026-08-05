@@ -10,9 +10,9 @@ import { TemplatesService } from '../../shared/data-access/templates.service';
 
 interface EditorRow {
   exercise: Exercise;
-  targetSets?: number;
-  targetReps?: number;
-  restSeconds?: number;
+  target_sets?: number;
+  target_reps?: number;
+  rest_seconds?: number;
 }
 
 @Component({
@@ -56,18 +56,18 @@ interface EditorRow {
               <div class="targets">
                 <label>
                   Sets
-                  <input type="number" min="1" [value]="row.targetSets ?? ''"
-                    (input)="setTarget($index, 'targetSets', $any($event.target).value)" />
+                  <input type="number" min="1" [value]="row.target_sets ?? ''"
+                    (input)="setTarget($index, 'target_sets', $any($event.target).value)" />
                 </label>
                 <label>
                   Reps
-                  <input type="number" min="1" [value]="row.targetReps ?? ''"
-                    (input)="setTarget($index, 'targetReps', $any($event.target).value)" />
+                  <input type="number" min="1" [value]="row.target_reps ?? ''"
+                    (input)="setTarget($index, 'target_reps', $any($event.target).value)" />
                 </label>
                 <label>
                   Rest (s)
-                  <input type="number" min="0" step="15" [value]="row.restSeconds ?? ''"
-                    (input)="setTarget($index, 'restSeconds', $any($event.target).value)" />
+                  <input type="number" min="0" step="15" [value]="row.rest_seconds ?? ''"
+                    (input)="setTarget($index, 'rest_seconds', $any($event.target).value)" />
                 </label>
               </div>
             </li>
@@ -210,9 +210,9 @@ export class TemplateEditorPage {
         this.rows.set(
           template.exercises.map((te) => ({
             exercise: te.exercise,
-            targetSets: te.target_sets ?? undefined,
-            targetReps: te.target_reps ?? undefined,
-            restSeconds: te.rest_seconds ?? undefined,
+            target_sets: te.target_sets ?? undefined,
+            target_reps: te.target_reps ?? undefined,
+            rest_seconds: te.rest_seconds ?? undefined,
           })),
         );
       }
@@ -240,7 +240,7 @@ export class TemplateEditorPage {
 
   setTarget(
     index: number,
-    field: 'targetSets' | 'targetReps' | 'restSeconds',
+    field: 'target_sets' | 'target_reps' | 'rest_seconds',
     value: string,
   ) {
     this.rows.update((rows) =>
@@ -258,9 +258,9 @@ export class TemplateEditorPage {
       name: this.name().trim(),
       exercises: this.rows().map((row) => ({
         exercise_id: row.exercise.id,
-        target_sets: row.targetSets,
-        target_reps: row.targetReps,
-        rest_seconds: row.restSeconds,
+        target_sets: row.target_sets,
+        target_reps: row.target_reps,
+        rest_seconds: row.rest_seconds,
       })),
     };
     const request = this.id()

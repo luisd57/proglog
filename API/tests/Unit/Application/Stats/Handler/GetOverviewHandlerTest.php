@@ -9,7 +9,7 @@ use App\Domain\Session\Entity\Session;
 use App\Domain\Session\Id\SessionExerciseId;
 use App\Domain\Session\Id\SessionId;
 use App\Domain\Session\Repository\SessionRepositoryInterface;
-use App\Domain\Stats\ValueObject\CumulativeVolumePoint;
+use App\Domain\Stats\Result\CumulativeVolumePoint;
 use App\Tests\Helper\DomainTestHelper;
 use Doctrine\Common\Collections\ArrayCollection;
 use PHPUnit\Framework\MockObject\MockObject;

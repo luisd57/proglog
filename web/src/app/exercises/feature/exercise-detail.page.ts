@@ -6,7 +6,8 @@ import { ChartPoint, LineChartComponent } from '../../shared/ui/line-chart/line-
 import { MuscleDiagramComponent } from '../../shared/ui/muscle-diagram/muscle-diagram.component';
 import { muscleHighlights } from '../../shared/utils/muscle-map';
 import { ExercisesService } from '../../shared/data-access/exercises.service';
-import { SeriesPoint, StatsService } from '../../shared/data-access/stats.service';
+import { StatsService } from '../../shared/data-access/stats.service';
+import { SeriesPoint } from '../../shared/utils/stats.model';
 
 @Component({
   selector: 'app-exercise-detail-page',

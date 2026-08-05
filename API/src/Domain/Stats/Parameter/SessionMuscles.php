@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Stats\ValueObject;
+namespace App\Domain\Stats\Parameter;
 
 /**
  * Parameter object for the weekly muscle aggregator: the muscles one

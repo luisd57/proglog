@@ -10,9 +10,9 @@ use App\Domain\Session\Entity\Session;
 use App\Domain\Session\Entity\SetLog;
 use App\Domain\Session\Id\SessionExerciseId;
 use App\Domain\Session\Repository\SessionRepositoryInterface;
+use App\Domain\Stats\Parameter\LoggedSet;
+use App\Domain\Stats\Parameter\SessionSets;
 use App\Domain\Stats\Service\ExerciseSeriesCalculator;
-use App\Domain\Stats\ValueObject\LoggedSet;
-use App\Domain\Stats\ValueObject\SessionSets;
 
 /**
  * Progress series of one exercise over its finished sessions. Composes the

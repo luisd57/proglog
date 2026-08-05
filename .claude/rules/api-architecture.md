@@ -28,7 +28,9 @@ Infrastructure → Application → Domain (never the reverse)
 - Repository Interfaces (driven ports): `src/Domain/{Domain}/Repository/`
 - Service Interfaces (driven ports): declare one whenever the domain needs an external capability. This project has no auth/mailer, so there are none today
 - Domain Services: pure business computations spanning multiple entities
-- Parameter Objects: bundle related inputs to domain services
+- Parameter Objects: `{Domain}/Parameter/` — inputs bundled for a domain service
+- Result Objects: `{Domain}/Result/` — what a domain service returns
+- Parameter and Result objects are plain `final readonly` data carriers with public constructors. They are NOT value objects: no private constructor, no static factory, no self-validation. Keep them out of `ValueObject/`
 - Exceptions: domain-specific, per subdomain
 
 ## Application Layer
@@ -42,9 +44,10 @@ Infrastructure → Application → Domain (never the reverse)
 - `Persistence/Doctrine/Type/` — custom DBAL types for VO↔DB mapping
 - `Persistence/Doctrine/Repository/` — repository implementations. `save()` = contains-guard → persist → flush; handlers NEVER call flush or manage transactions. No transaction middleware — an accepted trade-off: a use case that writes two aggregates isn't atomic, which is fine at this scale and worth revisiting if it stops being. Unwrap VOs before Doctrine (`$id->getValue()`, `$enum->value`); return `ArrayCollection`
 - `Http/Controller/` — thin controllers, delegate to handlers
+- `Http/EventSubscriber/` — `SecurityHeadersSubscriber` only (response headers on `kernel.response`). No rate limiting: that needs auth, which this project doesn't have
 - `Console/` — CLI commands (e.g. `app:seed-exercises`)
 
-No `Security/`, `Email/`, or `Http/EventSubscriber/` — this project has no auth, mailer, or rate limiting by design (see CLAUDE.md, Deliberate Deviations).
+No `Security/` and no `Email/` — no auth and no mailer by design (see CLAUDE.md, Deliberate Deviations).
 
 ## File Patterns
 

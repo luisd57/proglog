@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Stats\ValueObject;
+namespace App\Domain\Stats\Result;
 
 /**
  * A personal-record event: the session's top set beat every previous

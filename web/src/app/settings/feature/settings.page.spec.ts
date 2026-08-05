@@ -4,7 +4,7 @@ import {
   provideHttpClientTesting,
 } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { Profile } from '../../shared/data-access/measurements.service';
+import { Profile } from '../../shared/utils/measurement.model';
 import { SettingsPage } from './settings.page';
 
 function profileEnvelope(profile: Profile) {

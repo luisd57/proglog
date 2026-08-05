@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Stats\DTO\Output;
 
-use App\Domain\Stats\ValueObject\WeeklyMuscles;
+use App\Domain\Stats\Result\WeeklyMuscles;
 
 final readonly class WeeklyMusclesOutputDTO
 {

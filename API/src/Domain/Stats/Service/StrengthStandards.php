@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Stats\Service;
 
-use App\Domain\Stats\ValueObject\LiftStandard;
-use App\Domain\Stats\ValueObject\StandardRow;
+use App\Domain\Stats\Parameter\LiftStandard;
+use App\Domain\Stats\Parameter\StandardRow;
 
 /**
  * Strength standards (1RM in kg by bodyweight, sex) for the main barbell

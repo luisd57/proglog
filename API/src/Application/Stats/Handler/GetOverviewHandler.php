@@ -8,9 +8,9 @@ use App\Application\Stats\DTO\Output\OverviewOutputDTO;
 use App\Domain\Session\Entity\Session;
 use App\Domain\Session\Entity\SetLog;
 use App\Domain\Session\Repository\SessionRepositoryInterface;
+use App\Domain\Stats\Parameter\LoggedSet;
+use App\Domain\Stats\Parameter\SessionActivity;
 use App\Domain\Stats\Service\OverviewCalculator;
-use App\Domain\Stats\ValueObject\LoggedSet;
-use App\Domain\Stats\ValueObject\SessionActivity;
 use Symfony\Component\Clock\ClockInterface;
 
 /**

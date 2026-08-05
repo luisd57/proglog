@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Domain\Stats\Service;
 
-use App\Domain\Stats\ValueObject\ExerciseSeriesResult;
-use App\Domain\Stats\ValueObject\PrEvent;
-use App\Domain\Stats\ValueObject\SeriesPoint;
-use App\Domain\Stats\ValueObject\SessionSets;
+use App\Domain\Stats\Parameter\SessionSets;
+use App\Domain\Stats\Result\ExerciseSeriesResult;
+use App\Domain\Stats\Result\PrEvent;
+use App\Domain\Stats\Result\SeriesPoint;
 
 /**
  * Builds the progress series of one exercise: one point per finished session
