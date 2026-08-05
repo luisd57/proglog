@@ -7,7 +7,7 @@ paths:
 ## Test Infrastructure
 - **DomainTestHelper**: Factory methods for domain objects in controlled states. Use instead of calling constructors directly.
 - **IntegrationTestCase**: Extends KernelTestCase with automatic transaction wrapping. Use for repository tests.
-- **ApiTestCase**: Extends WebTestCase with transaction isolation, `jsonRequest()`, and one `create{{Role}}AndGetToken()` helper per user role. Use for controller tests.
+- **ApiTestCase**: Extends WebTestCase with transaction isolation and `jsonRequest()`. Use for controller tests. No auth helpers — this project has no auth.
 
 ## Layout & Naming
 - Suites: `Unit` and `Integration` ONLY — no "Functional". Controller/HTTP tests live under `tests/Integration/`, mirroring `src/` path-for-path.
@@ -21,7 +21,7 @@ paths:
 
 ## Running Tests
 ```bash
-docker-compose exec php vendor/bin/phpunit                    # All tests
-docker-compose exec php vendor/bin/phpunit --testsuite=Unit   # Unit only (no DB)
-docker-compose exec php vendor/bin/phpunit --testsuite=Integration
+make test              # all
+make test-unit         # unit only (no DB)
+make test-integration
 ```
