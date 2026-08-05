@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Measurement\Handler;
 
 use App\Domain\Measurement\Repository\MeasurementRepositoryInterface;
+use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Latest value per type (types never measured are absent). Walks the full
@@ -18,9 +19,9 @@ final readonly class GetLatestMeasurementsHandler
     }
 
     /**
-     * @return array<string, float>
+     * @return ArrayCollection<string, float>
      */
-    public function __invoke(): array
+    public function __invoke(): ArrayCollection
     {
         $latestByType = [];
 
@@ -28,6 +29,6 @@ final readonly class GetLatestMeasurementsHandler
             $latestByType[$measurement->getType()] = $measurement->getValue();
         }
 
-        return $latestByType;
+        return new ArrayCollection($latestByType);
     }
 }

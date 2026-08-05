@@ -1,4 +1,14 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, effect, input, signal } from '@angular/core';
+
+/**
+ * A request to run the timer. `nonce` distinguishes two requests for the same
+ * duration — without it, resting 90s twice in a row would not restart the
+ * countdown, because the input signal would not report a change.
+ */
+export interface RestRequest {
+  seconds: number;
+  nonce: number;
+}
 
 @Component({
   selector: 'app-rest-timer',
@@ -43,10 +53,19 @@ import { ChangeDetectionStrategy, Component, OnDestroy, signal } from '@angular/
   `,
 })
 export class RestTimerComponent implements OnDestroy {
+  readonly request = input<RestRequest | null>(null);
+
   readonly remaining = signal(0);
   readonly running = signal(false);
 
   private interval: ReturnType<typeof setInterval> | null = null;
+
+  constructor() {
+    effect(() => {
+      const request = this.request();
+      if (request) this.start(request.seconds);
+    });
+  }
 
   display(): string {
     const total = this.remaining();
@@ -55,7 +74,7 @@ export class RestTimerComponent implements OnDestroy {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   }
 
-  start(seconds: number) {
+  private start(seconds: number) {
     this.clear();
     this.remaining.set(seconds);
     this.running.set(true);

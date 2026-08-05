@@ -1,14 +1,5 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  linkedSignal,
-  signal,
-} from '@angular/core';
-import { rxResource } from '@angular/core/rxjs-interop';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { ChartPoint, LineChartComponent } from '../../shared/ui/line-chart/line-chart.component';
-import { StatsService } from '../../shared/data-access/stats.service';
 import { OverviewResult } from '../../shared/utils/stats.model';
 import { delta, formatDuration } from '../utils/overview';
 
@@ -34,15 +25,15 @@ const PERIODS: { value: string; label: string }[] = [
   template: `
     <header class="ov-head">
       <h2>Overview</h2>
-      <select [value]="period()" (change)="period.set($any($event.target).value)">
+      <select [value]="period()" (change)="periodChange.emit($any($event.target).value)">
         @for (p of periods; track p.value) {
           <option [value]="p.value">{{ p.label }}</option>
         }
       </select>
     </header>
 
-    @if (view(); as o) {
-      <div class="ov-body" [class.loading]="overview.isLoading()">
+    @if (result(); as o) {
+      <div class="ov-body" [class.loading]="loading()">
       <app-line-chart title="Cumulative volume" unit="kg" [points]="chartPoints()" />
       <div class="grid">
         @for (cell of cells(); track cell.label) {
@@ -100,31 +91,22 @@ const PERIODS: { value: string; label: string }[] = [
   `,
 })
 export class OverviewWidgetComponent {
-  private readonly statsService = inject(StatsService);
-
   readonly periods = PERIODS;
-  readonly period = signal('7d');
 
-  readonly overview = rxResource({
-    params: () => ({ period: this.period() }),
-    stream: ({ params }) => this.statsService.overview(params.period),
-  });
+  readonly result = input<OverviewResult | undefined>(undefined);
+  readonly period = input.required<string>();
+  readonly loading = input(false);
 
-  // Retain the last loaded result while a new period is fetching, so the card
-  // stays visible (just dimmed) instead of unmounting and flickering.
-  readonly view = linkedSignal<OverviewResult | undefined, OverviewResult | undefined>({
-    source: () => this.overview.value(),
-    computation: (next, prev) => next ?? prev?.value,
-  });
+  readonly periodChange = output<string>();
 
   readonly chartPoints = computed<ChartPoint[]>(() => {
-    const o = this.view();
+    const o = this.result();
     if (!o) return [];
     return o.cumulative_volume.map((p) => ({ label: p.date.slice(5), value: p.value }));
   });
 
   readonly cells = computed<StatCell[]>(() => {
-    const o = this.view();
+    const o = this.result();
     if (!o) return [];
     return [
       this.cell(o, 'Workouts', 'workouts', (n) => `${n}`),

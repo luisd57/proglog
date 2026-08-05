@@ -43,13 +43,13 @@ final class GetLatestMeasurementsHandlerTest extends TestCase
             ),
         ]));
 
-        $this->assertSame(['weight' => 81.4, 'waist' => 84.0], $this->handler->__invoke());
+        $this->assertSame(['weight' => 81.4, 'waist' => 84.0], $this->handler->__invoke()->toArray());
     }
 
     public function testLatestWithoutMeasurementsReturnsAnEmptyMap(): void
     {
         $this->measurementRepository->method('findAll')->willReturn(new ArrayCollection());
 
-        $this->assertSame([], $this->handler->__invoke());
+        $this->assertSame([], $this->handler->__invoke()->toArray());
     }
 }

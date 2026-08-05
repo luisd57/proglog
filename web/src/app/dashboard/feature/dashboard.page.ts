@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  linkedSignal,
+  signal,
+} from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
@@ -7,7 +14,8 @@ import { muscleHighlights } from '../../shared/utils/muscle-map';
 import { SessionsService } from '../../shared/data-access/sessions.service';
 import { StatsService } from '../../shared/data-access/stats.service';
 import { TemplatesService } from '../../shared/data-access/templates.service';
-import { OverviewWidgetComponent } from './overview-widget.component';
+import { OverviewResult } from '../../shared/utils/stats.model';
+import { OverviewWidgetComponent } from '../ui/overview-widget.component';
 
 @Component({
   selector: 'app-dashboard-page',
@@ -34,7 +42,12 @@ import { OverviewWidgetComponent } from './overview-widget.component';
       }
     </section>
 
-    <app-overview-widget />
+    <app-overview-widget
+      [result]="overviewView()"
+      [period]="overviewPeriod()"
+      [loading]="overview.isLoading()"
+      (periodChange)="overviewPeriod.set($event)"
+    />
 
     <div class="dash-grid">
       <section>
@@ -115,6 +128,20 @@ export class DashboardPage {
   readonly weekly = rxResource({ stream: () => this.statsService.weeklyMuscles() });
   readonly templates = rxResource({ stream: () => this.templatesService.list() });
   readonly sessions = rxResource({ stream: () => this.sessionsService.list() });
+
+  readonly overviewPeriod = signal('7d');
+
+  readonly overview = rxResource({
+    params: () => ({ period: this.overviewPeriod() }),
+    stream: ({ params }) => this.statsService.overview(params.period),
+  });
+
+  // Retain the last loaded result while a new period is fetching, so the card
+  // stays visible (just dimmed) instead of unmounting and flickering.
+  readonly overviewView = linkedSignal<OverviewResult | undefined, OverviewResult | undefined>({
+    source: () => this.overview.value(),
+    computation: (next, prev) => next ?? prev?.value,
+  });
 
   readonly highlights = computed(() => {
     const w = this.weekly.value();
