@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Application\Stats\DTO\Output;
 
-use App\Domain\Stats\ValueObject\CumulativeVolumePoint;
-use App\Domain\Stats\ValueObject\OverviewTotals;
+use App\Domain\Stats\Result\CumulativeVolumePoint;
+use App\Domain\Stats\Result\OverviewTotals;
 
 final readonly class OverviewOutputDTO
 {

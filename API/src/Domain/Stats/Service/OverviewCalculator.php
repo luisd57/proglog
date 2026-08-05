@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Domain\Stats\Service;
 
-use App\Domain\Stats\ValueObject\CumulativeVolumePoint;
-use App\Domain\Stats\ValueObject\OverviewTotals;
-use App\Domain\Stats\ValueObject\SessionActivity;
+use App\Domain\Stats\Parameter\SessionActivity;
+use App\Domain\Stats\Result\CumulativeVolumePoint;
+use App\Domain\Stats\Result\OverviewTotals;
 
 /**
  * Aggregates finished-session activity into overview totals and the

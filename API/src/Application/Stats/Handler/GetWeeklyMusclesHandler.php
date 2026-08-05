@@ -9,8 +9,8 @@ use App\Domain\Exercise\Repository\ExerciseRepositoryInterface;
 use App\Domain\Session\Entity\SessionExercise;
 use App\Domain\Session\Entity\SetLog;
 use App\Domain\Session\Repository\SessionRepositoryInterface;
+use App\Domain\Stats\Parameter\SessionMuscles;
 use App\Domain\Stats\Service\WeeklyMuscleAggregator;
-use App\Domain\Stats\ValueObject\SessionMuscles;
 use Symfony\Component\Clock\ClockInterface;
 
 /**

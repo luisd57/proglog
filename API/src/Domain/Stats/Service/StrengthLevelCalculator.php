@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Stats\Service;
 
-use App\Domain\Stats\ValueObject\LevelResult;
-use App\Domain\Stats\ValueObject\StandardRow;
+use App\Domain\Stats\Parameter\StandardRow;
+use App\Domain\Stats\Result\LevelResult;
 
 /**
  * Classifies an e1RM against a bodyweight-interpolated standards table.

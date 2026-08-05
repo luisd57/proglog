@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Application\Stats\DTO\Output;
 
-use App\Domain\Stats\ValueObject\ExerciseSeriesResult;
-use App\Domain\Stats\ValueObject\PrEvent;
-use App\Domain\Stats\ValueObject\SeriesPoint;
+use App\Domain\Stats\Result\ExerciseSeriesResult;
+use App\Domain\Stats\Result\PrEvent;
+use App\Domain\Stats\Result\SeriesPoint;
 
 final readonly class ExerciseSeriesOutputDTO
 {

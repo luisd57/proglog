@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Stats\ValueObject;
+namespace App\Domain\Stats\Result;
 
 /**
  * Result of the weekly muscle aggregation: muscles unioned across qualifying

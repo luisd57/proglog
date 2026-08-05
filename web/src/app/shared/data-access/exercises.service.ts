@@ -3,21 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiResponse } from '../utils/api-response.model';
 import { Exercise } from '../utils/exercise.model';
-
-export interface ExerciseFilters {
-  search?: string;
-  muscle?: string;
-  equipment?: string;
-}
-
-export interface ExerciseInput {
-  name: string;
-  primary_muscles: string[];
-  secondary_muscles?: string[];
-  equipment?: string;
-  category?: string;
-  instructions?: string;
-}
+import { ExerciseFilters, ExerciseInput } from '../utils/exercise-filters.model';
 
 @Injectable({ providedIn: 'root' })
 export class ExercisesService {

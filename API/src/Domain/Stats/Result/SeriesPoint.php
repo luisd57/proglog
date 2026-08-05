@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Stats\ValueObject;
+namespace App\Domain\Stats\Result;
 
 /**
  * One progress point: a finished session's top set, volume and e1RM for one

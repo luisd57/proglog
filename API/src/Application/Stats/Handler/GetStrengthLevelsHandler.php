@@ -14,10 +14,10 @@ use App\Domain\Profile\Entity\Profile;
 use App\Domain\Profile\Repository\ProfileRepositoryInterface;
 use App\Domain\Session\Entity\SetLog;
 use App\Domain\Session\Repository\SessionRepositoryInterface;
+use App\Domain\Stats\Parameter\LiftStandard;
 use App\Domain\Stats\Service\E1rmCalculator;
 use App\Domain\Stats\Service\StrengthLevelCalculator;
 use App\Domain\Stats\Service\StrengthStandards;
-use App\Domain\Stats\ValueObject\LiftStandard;
 
 /**
  * Classifies the five main lifts against the strength standards. Requires the

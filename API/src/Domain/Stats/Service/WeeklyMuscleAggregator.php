@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Stats\Service;
 
-use App\Domain\Stats\ValueObject\SessionMuscles;
-use App\Domain\Stats\ValueObject\WeeklyMuscles;
+use App\Domain\Stats\Parameter\SessionMuscles;
+use App\Domain\Stats\Result\WeeklyMuscles;
 
 /**
  * Unions the muscles trained across qualifying session exercises; muscles in

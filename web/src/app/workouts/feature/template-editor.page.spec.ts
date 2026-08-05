@@ -81,8 +81,8 @@ describe('TemplateEditorPage', () => {
 
     page.name.set('Push Day');
     page.add(BENCH);
-    page.setTarget(0, 'targetSets', '3');
-    page.setTarget(0, 'restSeconds', '120');
+    page.setTarget(0, 'target_sets', '3');
+    page.setTarget(0, 'rest_seconds', '120');
     page.save();
     fixture.detectChanges();
 

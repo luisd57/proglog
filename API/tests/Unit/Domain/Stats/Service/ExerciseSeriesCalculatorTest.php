@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Domain\Stats\Service;
 
+use App\Domain\Stats\Parameter\LoggedSet;
+use App\Domain\Stats\Parameter\SessionSets;
 use App\Domain\Stats\Service\ExerciseSeriesCalculator;
-use App\Domain\Stats\ValueObject\LoggedSet;
-use App\Domain\Stats\ValueObject\SessionSets;
 use PHPUnit\Framework\TestCase;
 
 final class ExerciseSeriesCalculatorTest extends TestCase

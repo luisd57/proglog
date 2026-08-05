@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Stats\ValueObject;
+namespace App\Domain\Stats\Result;
 
 /**
  * One running-sum volume point; date is a server-local calendar day

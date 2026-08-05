@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Stats\ValueObject;
+namespace App\Domain\Stats\Parameter;
 
 /**
  * Strength standard for one lift: seeded exercise names it applies to (first

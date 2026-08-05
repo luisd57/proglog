@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Domain\Stats\Service;
 
+use App\Domain\Stats\Parameter\SessionMuscles;
 use App\Domain\Stats\Service\WeeklyMuscleAggregator;
-use App\Domain\Stats\ValueObject\SessionMuscles;
 use PHPUnit\Framework\TestCase;
 
 final class WeeklyMuscleAggregatorTest extends TestCase
