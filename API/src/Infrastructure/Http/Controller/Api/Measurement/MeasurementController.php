@@ -49,7 +49,7 @@ final class MeasurementController extends AbstractController
     {
         // Cast to object so an empty map encodes as {} instead of [].
         return $this->success([
-            'latest' => (object) $handler->__invoke(),
+            'latest' => (object) $handler->__invoke()->toArray(),
         ]);
     }
 

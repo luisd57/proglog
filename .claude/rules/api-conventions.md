@@ -43,7 +43,8 @@ paths:
 - Input DTOs: `DTO/Input/`, suffixed `InputDTO`
 - Output DTOs: `DTO/Output/`, suffixed `OutputDTO`
 - All DTOs are `final readonly class`
-- Output DTOs include static `fromEntity()` factory and `toArray()` method
+- Every Output DTO has `toArray()`. Entity-backed ones also get a static `fromEntity()`
+- A DTO built from computed results, or needing repositories to compose, is assembled by its handler or an Application Service (`SessionAssembler`) instead. Don't add a factory that only aliases the constructor
 
 ## Value Objects
 - Static factories: `fromString()`, `create()`, `generate()`

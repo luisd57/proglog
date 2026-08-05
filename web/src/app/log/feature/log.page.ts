@@ -1,16 +1,9 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-  input,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { forkJoin, map, of } from 'rxjs';
-import { RestTimerComponent } from '../../shared/ui/rest-timer/rest-timer.component';
+import { RestRequest, RestTimerComponent } from '../../shared/ui/rest-timer/rest-timer.component';
 import { ExercisesService } from '../../shared/data-access/exercises.service';
 import { SessionsService } from '../../shared/data-access/sessions.service';
 import { ExerciseBest } from '../../shared/utils/e1rm';
@@ -43,7 +36,7 @@ import { SessionExerciseCardComponent } from '../ui/session-exercise-card.compon
         <app-session-exercise-card
           [data]="se"
           [best]="bests.value()?.[se.id] ?? null"
-          (rest)="timer().start($event)"
+          (rest)="startRest($event)"
           (removed)="removeExercise(se.id)"
           (saveSets)="persistSets(se.id, $event)"
           (notesChange)="persistNotes(se.id, $event)"
@@ -72,7 +65,7 @@ import { SessionExerciseCardComponent } from '../ui/session-exercise-card.compon
       <p class="error">Session not found.</p>
     }
 
-    <app-rest-timer />
+    <app-rest-timer [request]="restRequest()" />
   `,
   styles: `
     h2 { font-size: 1rem; margin: 1.5rem 0 0.5rem; }
@@ -105,7 +98,9 @@ export class LogPage {
 
   readonly id = input.required<string>();
   readonly search = signal('');
-  readonly timer = viewChild.required(RestTimerComponent);
+  readonly restRequest = signal<RestRequest | null>(null);
+
+  private restNonce = 0;
 
   readonly session = rxResource({
     params: () => this.id(),
@@ -149,6 +144,10 @@ export class LogPage {
       this.search.set('');
       this.session.reload();
     });
+  }
+
+  startRest(seconds: number) {
+    this.restRequest.set({ seconds, nonce: this.restNonce++ });
   }
 
   removeExercise(sessionExerciseId: string) {

@@ -18,6 +18,7 @@ paths:
 - All integration tests run in transactions that rollback in `tearDown()` — no data persists.
 - Kernel reboot disabled in API tests for transaction isolation across multiple HTTP requests.
 - Build domain objects through `DomainTestHelper` factories, never by reaching past an entity's own constructor.
+- `reconstitute()` — the entity factory that bypasses invariants to reach states only time can produce — is for test helpers ONLY, never in handlers or controllers. No entity here declares one yet; the rule holds the moment one does.
 
 ## Running Tests
 ```bash

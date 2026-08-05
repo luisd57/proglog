@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RestTimerComponent } from './rest-timer.component';
 
 describe('RestTimerComponent', () => {
@@ -13,42 +13,59 @@ describe('RestTimerComponent', () => {
   function create() {
     const fixture = TestBed.createComponent(RestTimerComponent);
     fixture.detectChanges();
-    return fixture.componentInstance;
+    return fixture;
+  }
+
+  let nonce = 0;
+
+  function rest(fixture: ComponentFixture<RestTimerComponent>, seconds: number) {
+    fixture.componentRef.setInput('request', { seconds, nonce: nonce++ });
+    fixture.detectChanges();
   }
 
   it('counts down once started', () => {
-    const timer = create();
-    timer.start(90);
-    expect(timer.remaining()).toBe(90);
-    expect(timer.running()).toBe(true);
+    const fixture = create();
+    rest(fixture, 90);
+    expect(fixture.componentInstance.remaining()).toBe(90);
+    expect(fixture.componentInstance.running()).toBe(true);
 
     vi.advanceTimersByTime(3000);
-    expect(timer.remaining()).toBe(87);
+    expect(fixture.componentInstance.remaining()).toBe(87);
   });
 
   it('stops at zero', () => {
-    const timer = create();
-    timer.start(2);
+    const fixture = create();
+    rest(fixture, 2);
     vi.advanceTimersByTime(5000);
-    expect(timer.remaining()).toBe(0);
-    expect(timer.running()).toBe(false);
+    expect(fixture.componentInstance.remaining()).toBe(0);
+    expect(fixture.componentInstance.running()).toBe(false);
   });
 
   it('restarting replaces the countdown', () => {
-    const timer = create();
-    timer.start(60);
+    const fixture = create();
+    rest(fixture, 60);
     vi.advanceTimersByTime(10_000);
-    timer.start(90);
-    expect(timer.remaining()).toBe(90);
+    rest(fixture, 90);
+    expect(fixture.componentInstance.remaining()).toBe(90);
     vi.advanceTimersByTime(1000);
-    expect(timer.remaining()).toBe(89);
+    expect(fixture.componentInstance.remaining()).toBe(89);
+  });
+
+  it('restarts for a repeated duration', () => {
+    const fixture = create();
+    rest(fixture, 60);
+    vi.advanceTimersByTime(10_000);
+    expect(fixture.componentInstance.remaining()).toBe(50);
+
+    rest(fixture, 60);
+    expect(fixture.componentInstance.remaining()).toBe(60);
   });
 
   it('can be dismissed', () => {
-    const timer = create();
-    timer.start(60);
-    timer.stop();
-    expect(timer.running()).toBe(false);
-    expect(timer.remaining()).toBe(0);
+    const fixture = create();
+    rest(fixture, 60);
+    fixture.componentInstance.stop();
+    expect(fixture.componentInstance.running()).toBe(false);
+    expect(fixture.componentInstance.remaining()).toBe(0);
   });
 });

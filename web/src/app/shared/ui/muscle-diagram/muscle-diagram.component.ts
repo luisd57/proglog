@@ -48,7 +48,7 @@ import { RegionHighlights } from '../../utils/muscle-map';
   `,
 })
 export class MuscleDiagramComponent {
-  highlights = input<RegionHighlights>({});
+  readonly highlights = input<RegionHighlights>({});
 
   protected readonly views = [
     { label: 'front', regions: anteriorData },
