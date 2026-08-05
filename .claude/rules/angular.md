@@ -4,7 +4,7 @@ paths:
   - web/src/**/*.html
   - web/src/**/*.scss
 ---
-# Angular Conventions
+# Angular Structure
 
 ## Domain-Based Folder Structure
 
@@ -71,19 +71,3 @@ Kebab-case for all files/folders. One component/service/store per file. No `inde
 - Only smart components (feature/) may inject from data-access/
 - Envelope unwrapping is a per-service `unwrap<T>()`; `ApiResponse<T>` lives in `shared/utils/api-response.model.ts`. No auth interceptor — this app has no auth.
 - Consume API snake_case field names as-is — no camelCase mapping layer
-
-## Style
-- Explicit types on every declaration/member/parameter (ESLint `typedef` + `explicit-function-return-type`, strictTypeChecked); `no-inferrable-types` stays OFF
-- Template-only members `protected`; exposed signals `readonly`; selector prefix `app`
-
-## Modern Angular Standards (v21+)
-- All components standalone — NO NgModules, no `.module.ts` files
-- Signal APIs: `input()`, `output()`, `model()` — NOT `@Input()`, `@Output()`
-- `inject()` function — NOT constructor injection
-- State: `signal()`, `computed()`, `linkedSignal()`, `resource()` / `httpResource()`
-- Control flow: `@if`, `@for`, `@switch` — NOT `*ngIf`, `*ngFor`, `*ngSwitch`
-- Zoneless by default — no Zone.js
-- Functional providers in `app.config.ts`: `provideRouter()`, `provideHttpClient()`
-- Vitest for testing — NOT Karma/Jasmine
-- Signal Forms (`@angular/forms/signals`) for new forms
-- Prefer `[class]` / `[style]` bindings over `NgClass` / `NgStyle`

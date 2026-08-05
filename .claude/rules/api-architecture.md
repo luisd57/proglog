@@ -14,8 +14,8 @@ Infrastructure → Application → Domain (never the reverse)
 
 ## ORM Pragmatism (deliberate, do not "fix")
 
-- ORM attributes (`#[ORM\...]`) live directly on Domain entities. No separate mapping layer (XML/annotations-elsewhere) — we don't plan to swap ORMs.
-- NO Doctrine relation attributes (`OneToMany`, `ManyToOne`, `mappedBy`, `inversedBy`). Entities reference other aggregates by ID value objects; repositories resolve them. Never introduce bidirectional mappings.
+- ORM attributes (`#[ORM\...]`) live directly on Domain entities. No separate mapping layer (XML/annotations-elsewhere): the abstraction only pays off if you swap ORMs, and at this scale that isn't happening.
+- NO Doctrine relation attributes (`OneToMany`, `ManyToOne`, `mappedBy`, `inversedBy`). Entities reference other aggregates by ID value objects; repositories resolve them. Never introduce bidirectional mappings — they buy coupling between aggregates and lazy-loading surprises, and explicit repository lookups are cheaper to reason about.
 - This is an ORM-mapping rule, NOT a schema rule. Migrations still declare `FOREIGN KEY` constraints with explicit `ON DELETE CASCADE` / `SET NULL`: referential integrity belongs in the database, and hand-rolled cascades in repositories fail silently when they miss a row.
 - VO persistence: single-column VO → custom DBAL type extending the NEAREST base type (e.g. `GuidType`), with `public const string NAME`. Multi-field VO → `#[ORM\Embeddable]` on the VO + `#[ORM\Embedded(columnPrefix: false)]` on the entity, and the `ValueObject/` dir registered as its own doctrine.yaml mapping entry.
 - ORM attributes go on promoted constructor params for immutable fields; mutable state is declared as class properties.
@@ -26,7 +26,7 @@ Infrastructure → Application → Domain (never the reverse)
 - IDs: `src/Domain/{Domain}/Id/` (UUID v7 via symfony/uid) — separate folder from `ValueObject/`
 - Value Objects: immutable, self-validating (IDs, Email, status/state enums, time ranges — anything with validation or identity semantics)
 - Repository Interfaces (driven ports): `src/Domain/{Domain}/Repository/`
-- Service Interfaces (driven ports): e.g. `EmailSenderInterface`, `JwtTokenGeneratorInterface`, `PasswordHasherInterface`
+- Service Interfaces (driven ports): declare one whenever the domain needs an external capability. This project has no auth/mailer, so there are none today
 - Domain Services: pure business computations spanning multiple entities
 - Parameter Objects: bundle related inputs to domain services
 - Exceptions: domain-specific, per subdomain
@@ -40,12 +40,11 @@ Infrastructure → Application → Domain (never the reverse)
 ## Infrastructure Layer
 
 - `Persistence/Doctrine/Type/` — custom DBAL types for VO↔DB mapping
-- `Persistence/Doctrine/Repository/` — repository implementations. `save()` = contains-guard → persist → flush; handlers NEVER call flush or manage transactions (no transaction middleware — accepted trade-off). Unwrap VOs before Doctrine (`$id->getValue()`, `$enum->value`); return `ArrayCollection`
-- `Security/` — password hasher, JWT, token revocation (Redis)
-- `Email/` — mailer adapter. No Twig/templates dir: senders build html+text via private heredocs, `htmlspecialchars(ENT_QUOTES | ENT_HTML5)` on every interpolated value. Callers try/catch `\Throwable` + log — email failure never fails the use case
+- `Persistence/Doctrine/Repository/` — repository implementations. `save()` = contains-guard → persist → flush; handlers NEVER call flush or manage transactions. No transaction middleware — an accepted trade-off: a use case that writes two aggregates isn't atomic, which is fine at this scale and worth revisiting if it stops being. Unwrap VOs before Doctrine (`$id->getValue()`, `$enum->value`); return `ArrayCollection`
 - `Http/Controller/` — thin controllers, delegate to handlers
-- `Http/EventSubscriber/` — rate limiting, security headers
-- `Console/` — CLI commands
+- `Console/` — CLI commands (e.g. `app:seed-exercises`)
+
+No `Security/`, `Email/`, or `Http/EventSubscriber/` — this project has no auth, mailer, or rate limiting by design (see CLAUDE.md, Deliberate Deviations).
 
 ## File Patterns
 
@@ -60,9 +59,9 @@ Infrastructure → Application → Domain (never the reverse)
 3. Custom DBAL Type in `src/Infrastructure/Persistence/Doctrine/Type/`
 4. Register type in `config/packages/doctrine.yaml`
 5. Repository impl in `src/Infrastructure/Persistence/Doctrine/Repository/`
-6. Migration via `php bin/console doctrine:migrations:diff`
+6. Migration written BY HAND — never `doctrine:migrations:diff`, which wants to drop every hand-written index and FK constraint (see `dev-gotchas.md`)
 
 ### New API Endpoint
 1. Route method in controller in `src/Infrastructure/Http/Controller/Api/`
 2. Input DTO + Handler if new use case
-3. Update `config/packages/security.yaml` if new access rules needed
+3. Update `docs/api-contract.md` — it is the source of truth for both sides

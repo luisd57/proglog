@@ -1,11 +1,6 @@
 {
   "permissions": {
     "allow": [
-      "PowerShell(docker compose -f docker-compose.dev.yml run --rm api npm run test:e2e -- stats)",
-      "PowerShell(docker compose -f docker-compose.dev.yml run --rm web npm test)",
-      "PowerShell(docker compose -f docker-compose.dev.yml up -d api 2>&1 | Out-Null; Start-Sleep -Seconds 3; try { $r = Invoke-RestMethod \"http://localhost:3000/api/stats/overview?period=7d\"; $r | ConvertTo-Json -Depth 4 } catch { \"ERR: $\\($_.Exception.Message\\)\" })",
-      "Bash(cat ~/.claude/plugins/marketplaces/claude-plugins-official/external_plugins/playwright/.claude-plugin/*.json 2>/dev/null | head -40; echo ===; cat ~/.claude/plugins/installed_plugins.json)",
-      "Read(//c/Users/luisr/.claude/plugins/marketplaces/claude-plugins-official/external_plugins/playwright/.claude-plugin/**)",
       "Read(//c/Users/luisr/.claude/plugins/**)"
     ]
   }
