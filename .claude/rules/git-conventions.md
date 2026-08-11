@@ -7,6 +7,6 @@
 - Commit or push only when the user asks.
 
 ## Branches & PRs
-- On the default branch (main/master), create a branch before committing — never commit directly to it.
+- On the default branch (main/master), create a branch before committing - never commit directly to it.
 - Never `--no-verify` or skip signing unless the user explicitly asks; if a hook fails, fix the cause.
-- `gh pr merge`: switch off the feature branch first (`git checkout main`), then merge, then `git fetch origin && git pull --ff-only` before deleting the local branch — otherwise local main can't fast-forward.
+- `gh pr merge`: switch off the feature branch first (`git checkout main`), then merge, then `git fetch origin && git pull --ff-only` before deleting the local branch - otherwise local main can't fast-forward.
