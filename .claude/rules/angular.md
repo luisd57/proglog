@@ -54,7 +54,7 @@ Kebab-case for all files/folders. One component/service/store per file. No `inde
 - Standalone, no NgModules
 - Inject services/stores via `inject()`
 - Pass data to dumb components via signal `input()`, receive events via `output()`
-- Minimal template logic — delegate display to `ui/` components
+- Minimal template logic - delegate display to `ui/` components
 
 ## Dumb Components (ui/)
 - Standalone, receive data via signal `input()`, emit via `output()`
@@ -62,12 +62,12 @@ Kebab-case for all files/folders. One component/service/store per file. No `inde
 
 ## Shell Routes
 - Every domain with multiple routes has a `<domain>-shell.routes.ts` in `feature/`
-- Contains ONLY route definitions — no components, no services
+- Contains ONLY route definitions - no components, no services
 - Use `loadComponent` for individual pages, `loadChildren` for domain route sets
 
 ## Data-Access
 - Services: HTTP/API interaction (`<domain>.service.ts`)
-- Stores (`<domain>.store.ts`) are OPTIONAL — most domains need only a service. Add a store only for state shared across pages. Don't scaffold one by default.
+- Stores (`<domain>.store.ts`) are OPTIONAL - most domains need only a service. Add a store only for state shared across pages. Don't scaffold one by default.
 - Only smart components (feature/) may inject from data-access/
-- Envelope unwrapping is a per-service `unwrap<T>()`; `ApiResponse<T>` lives in `shared/utils/api-response.model.ts`. No auth interceptor — this app has no auth.
-- Consume API snake_case field names as-is — no camelCase mapping layer
+- Envelope unwrapping is a per-service `unwrap<T>()`; `ApiResponse<T>` lives in `shared/utils/api-response.model.ts`. No auth interceptor - this app has no auth.
+- Consume API snake_case field names as-is - no camelCase mapping layer
