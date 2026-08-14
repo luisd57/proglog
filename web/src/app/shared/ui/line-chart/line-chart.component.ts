@@ -89,7 +89,7 @@ export class LineChartComponent implements OnDestroy {
           },
         });
       } catch {
-        // canvas not available (jsdom) — chart is purely visual
+        // canvas not available (jsdom) - chart is purely visual
       }
     });
   }

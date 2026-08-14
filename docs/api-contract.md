@@ -2,20 +2,20 @@
 
 Source of truth for the PHP backend and the Angular client. Derived from the retired
 NestJS services (removed in the same commit that landed this backend; see git history
-for `api/src/modules/`) — same paths, behavior ported faithfully unless a deviation is
+for `api/src/modules/`) - same paths, behavior ported faithfully unless a deviation is
 listed. All endpoints prefixed `/api`.
 
 ## Conventions
 
 - **Envelope** (every endpoint except `GET /api/health`):
-  - Success: `{"success": true, "data": <payload>}` — payload objects keyed by resource
+  - Success: `{"success": true, "data": <payload>}` - payload objects keyed by resource
     (`{"exercise": {...}}`, `{"sessions": [...]}`).
   - Error: `{"success": false, "error": {"code": "SCREAMING_SNAKE", "message": "..."}}`;
     validation errors add `"details": {field: "first message"}` with code `VALIDATION_ERROR`.
 - **Wire format**: snake_case everywhere (fields, query params, request bodies).
   Old camelCase names are renamed: `weightKg`→`weight_kg`, `primaryMuscles`→`primary_muscles`,
   `isCustom`→`is_custom`, `excludeSession`→`exclude_session`, etc.
-- **IDs**: UUID v7 strings (old API used cuid — all IDs are new after data migration).
+- **IDs**: UUID v7 strings (old API used cuid - all IDs are new after data migration).
   Malformed UUID in a path/body → 422.
 - **Dates**: ATOM / RFC 3339 (`2026-08-04T10:00:00+00:00`). Exceptions: `profile.birth_date`
   and `cumulative_volume[].date` are plain `YYYY-MM-DD`.
@@ -27,7 +27,7 @@ listed. All endpoints prefixed `/api`.
   `TEMPLATE_NOT_FOUND`, `SESSION_NOT_FOUND`, `SESSION_EXERCISE_NOT_FOUND`,
   `MEASUREMENT_NOT_FOUND`.
 - **No auth** of any kind (deliberate: single-user LAN tool).
-- **No pagination anywhere** — the old API paginates nothing (the exercises list filters
+- **No pagination anywhere** - the old API paginates nothing (the exercises list filters
   but returns the full result set; catalog is ~870 rows). Deliberate.
 
 ### Deviations from the NestJS API (all deliberate)
@@ -76,7 +76,7 @@ listed. All endpoints prefixed `/api`.
 
 ## Health
 
-### GET /api/health — `api_health`
+### GET /api/health - `api_health`
 No envelope (probe-friendly). 200 `{"status": "ok", "timestamp": "<ATOM>"}`;
 503 `{"status": "unhealthy", ...}` if DB unreachable.
 
@@ -84,11 +84,11 @@ No envelope (probe-friendly). 200 `{"status": "ok", "timestamp": "<ATOM>"}`;
 
 ## Exercises
 
-### GET /api/exercises — `api_exercises_list`
+### GET /api/exercises - `api_exercises_list`
 Query (all optional): `search`, `muscle`, `equipment`.
 - `search` is tokenized: lowercase, split on whitespace, strip non-alphanumerics,
   trim trailing `s` from tokens longer than 2 chars. Every token must appear in the
-  name (case-insensitive substring, any order) — "chin ups" finds "Chin-Up".
+  name (case-insensitive substring, any order) - "chin ups" finds "Chin-Up".
 - `muscle`: exact element match against `primary_muscles` OR `secondary_muscles`.
 - `equipment`: exact match.
 - Results ordered by name ASC; when searching, re-ranked by: exact normalized-name
@@ -98,10 +98,10 @@ Query (all optional): `search`, `muscle`, `equipment`.
 
 200: `{"exercises": [Exercise]}`
 
-### GET /api/exercises/{id} — `api_exercises_show`
+### GET /api/exercises/{id} - `api_exercises_show`
 200: `{"exercise": Exercise}` · 404 `EXERCISE_NOT_FOUND` · 422 malformed UUID
 
-### POST /api/exercises — `api_exercises_create`
+### POST /api/exercises - `api_exercises_create`
 Body:
 ```json
 {
@@ -116,14 +116,14 @@ Body:
 Always creates `is_custom: true`. Name is trimmed.
 201: `{"exercise": Exercise}` · 422 validation · 409 `DUPLICATE_EXERCISE_NAME`
 
-### PATCH /api/exercises/{id} — `api_exercises_update`
+### PATCH /api/exercises/{id} - `api_exercises_update`
 Patch semantics: only provided keys are applied; `equipment`/`category`/`instructions`
 accept explicit `null` to clear. Only custom exercises may be updated.
 Same field rules as create (if provided).
 200: `{"exercise": Exercise}` · 404 · 409 `BUILT_IN_EXERCISE_IMMUTABLE` ·
 409 `DUPLICATE_EXERCISE_NAME` · 422
 
-### DELETE /api/exercises/{id} — `api_exercises_delete`
+### DELETE /api/exercises/{id} - `api_exercises_delete`
 Only custom exercises, and only when unreferenced: an exercise used by any template line
 or logged session exercise is refused (the FK is RESTRICT; the handler checks first).
 204 · 404 · 409 `BUILT_IN_EXERCISE_IMMUTABLE` · 409 `EXERCISE_IN_USE` · 422
@@ -152,18 +152,18 @@ or logged session exercise is refused (the FK is RESTRICT; the handler checks fi
 }
 ```
 
-### GET /api/templates — `api_templates_list`
+### GET /api/templates - `api_templates_list`
 Non-archived templates ordered by `sort_order` ASC. 200: `{"templates": [TemplateSummary]}`
 
-### GET /api/templates/{id} — `api_templates_show`
+### GET /api/templates/{id} - `api_templates_show`
 Exercises ordered by `sort_order` ASC. 200: `{"template": Template}` · 404 `TEMPLATE_NOT_FOUND` · 422
 
-### GET /api/templates/{id}/muscles — `api_templates_muscles`
+### GET /api/templates/{id}/muscles - `api_templates_muscles`
 Union of muscles across the template's exercises; muscles in `primary` are removed
 from `secondary`.
 200: `{"primary": ["chest", ...], "secondary": ["triceps", ...]}` · 404 · 422
 
-### POST /api/templates — `api_templates_create`
+### POST /api/templates - `api_templates_create`
 ```json
 {
   "name": "Push Day",                       // required, non-blank
@@ -176,12 +176,12 @@ from `secondary`.
 (0 for the first); exercise `sort_order` = array index.
 201: `{"template": Template}` · 422 · 404 `EXERCISE_NOT_FOUND` (unknown `exercise_id`)
 
-### PUT /api/templates/{id} — `api_templates_update`
+### PUT /api/templates/{id} - `api_templates_update`
 Same body as create. Full replace: name updated, exercise list deleted and recreated
 (existing template-exercise IDs change). `sort_order` of the template unchanged.
 200: `{"template": Template}` · 404 · 422
 
-### DELETE /api/templates/{id} — `api_templates_delete`
+### DELETE /api/templates/{id} - `api_templates_delete`
 204 · 404 · 422. Sessions that referenced it keep running: `sessions.template_id`
 is set NULL (ON DELETE SET NULL semantics, as in the old schema).
 
@@ -226,19 +226,19 @@ is set NULL (ON DELETE SET NULL semantics, as in the old schema).
 }
 ```
 
-### POST /api/sessions — `api_sessions_start`
+### POST /api/sessions - `api_sessions_start`
 Body: `{"template_id": "uuid"}` or `{}`/absent for a free session. When a template is
 given, its exercises are copied as session exercises (sort_order = index), with no sets.
 `started_at` = now (server clock via ClockInterface).
 201: `{"session": Session}` · 404 `TEMPLATE_NOT_FOUND` · 422
 
-### GET /api/sessions — `api_sessions_list`
+### GET /api/sessions - `api_sessions_list`
 All sessions (finished or not) ordered by `started_at` DESC. 200: `{"sessions": [SessionSummary]}`
 
-### GET /api/sessions/{id} — `api_sessions_show`
+### GET /api/sessions/{id} - `api_sessions_show`
 200: `{"session": Session}` · 404 `SESSION_NOT_FOUND` · 422
 
-### PUT /api/sessions/{id}/exercises/{session_exercise_id}/sets — `api_sessions_replace_sets`
+### PUT /api/sessions/{id}/exercises/{session_exercise_id}/sets - `api_sessions_replace_sets`
 Replaces ALL sets of the session exercise:
 ```json
 {"sets": [{"weight_kg": 80, "reps": 8, "is_warmup": false, "notes": null}]}
@@ -248,25 +248,25 @@ index (1-based). Empty list allowed (clears sets). `weight_kg` numeric >= 0, `re
 200: `{"success": true, "data": null}` · 404 `SESSION_EXERCISE_NOT_FOUND` (also when the
 session exercise belongs to another session) · 422
 
-### POST /api/sessions/{id}/exercises — `api_sessions_add_exercise`
+### POST /api/sessions/{id}/exercises - `api_sessions_add_exercise`
 Body: `{"exercise_id": "uuid"}`. Appended with next `sort_order`.
 200: `{"session": Session}` · 404 `SESSION_NOT_FOUND` / `EXERCISE_NOT_FOUND` · 422
 
-### DELETE /api/sessions/{id}/exercises/{session_exercise_id} — `api_sessions_remove_exercise`
+### DELETE /api/sessions/{id}/exercises/{session_exercise_id} - `api_sessions_remove_exercise`
 Deletes the session exercise and its sets. 200: `{"session": Session}` · 404 · 422
 
-### PATCH /api/sessions/{id} — `api_sessions_update_notes`
+### PATCH /api/sessions/{id} - `api_sessions_update_notes`
 Body: `{"notes": "..."}` (required string, may be empty).
 200: `{"success": true, "data": null}` · 404 · 422
 
-### PATCH /api/sessions/{id}/exercises/{session_exercise_id} — `api_sessions_update_exercise_notes`
+### PATCH /api/sessions/{id}/exercises/{session_exercise_id} - `api_sessions_update_exercise_notes`
 Body: `{"notes": "..."}`. 200: `{"success": true, "data": null}` · 404 · 422
 
-### POST /api/sessions/{id}/finish — `api_sessions_finish`
+### POST /api/sessions/{id}/finish - `api_sessions_finish`
 Sets `finished_at` = now (idempotent overwrite, like the old API).
 200: `{"session": Session}` · 404 · 422
 
-### DELETE /api/sessions/{id} — `api_sessions_delete`
+### DELETE /api/sessions/{id} - `api_sessions_delete`
 Cascades to session exercises and sets. 204 · 404 · 422
 
 ---
@@ -279,20 +279,20 @@ Valid `type` values (exactly, camelCase L/R suffixes preserved as-is on the wire
 
 **Measurement**: `{"id": "uuid", "type": "weight", "value": 82.5, "measured_at": "<ATOM>"}`
 
-### GET /api/measurements?type=weight — `api_measurements_series`
+### GET /api/measurements?type=weight - `api_measurements_series`
 Full series for one type, ordered `measured_at` ASC.
 200: `{"measurements": [Measurement]}` · 422 missing/unknown `type`
 
-### GET /api/measurements/latest — `api_measurements_latest`
+### GET /api/measurements/latest - `api_measurements_latest`
 Latest value per type (types never measured are absent).
 200: `{"latest": {"weight": 82.5, "waist": 78.0}}`
 
-### POST /api/measurements — `api_measurements_create`
+### POST /api/measurements - `api_measurements_create`
 Body: `{"type": "weight", "value": 82.5, "measured_at": "<ATOM>"}`; `measured_at`
 optional (default now). `value` must be > 0.
 201: `{"measurement": Measurement}` · 422
 
-### DELETE /api/measurements/{id} — `api_measurements_delete`
+### DELETE /api/measurements/{id} - `api_measurements_delete`
 204 · 404 `MEASUREMENT_NOT_FOUND` · 422
 
 ---
@@ -310,10 +310,10 @@ Singleton (single user). **Profile**:
 ```
 (The internal singleton row id is not exposed.)
 
-### GET /api/profile — `api_profile_show`
+### GET /api/profile - `api_profile_show`
 Creates the default row on first access. 200: `{"profile": Profile}`
 
-### PATCH /api/profile — `api_profile_update`
+### PATCH /api/profile - `api_profile_update`
 Patch semantics; `sex`, `birth_date`, `height_cm` accept explicit null to clear.
 `sex` must be `male`/`female`/null; `default_rest_seconds` int > 0.
 200: `{"profile": Profile}` · 422
@@ -327,8 +327,8 @@ warmup sets** (`is_warmup: true`). e1RM uses the Epley formula:
 `e1rm = weight_kg * (1 + reps / 30)` (0 when reps <= 0). Port `e1rm.ts` and
 `strength-standards.ts` (thresholds tables + interpolation + level walk) verbatim.
 
-### GET /api/stats/exercise/{id}/best — `api_stats_exercise_best`
-Query: `exclude_session` (optional session UUID — used to exclude the in-progress
+### GET /api/stats/exercise/{id}/best - `api_stats_exercise_best`
+Query: `exclude_session` (optional session UUID - used to exclude the in-progress
 session when showing PRs during a workout).
 Best across all qualifying sets of the exercise. Unknown exercise id → 200 with nulls
 (no existence check, as in the old API).
@@ -337,7 +337,7 @@ Best across all qualifying sets of the exercise. Unknown exercise id → 200 wit
 ```
 200 · 422 malformed UUID
 
-### GET /api/stats/exercise/{id}/series — `api_stats_exercise_series`
+### GET /api/stats/exercise/{id}/series - `api_stats_exercise_series`
 One point per finished session containing the exercise (sessions ordered `started_at`
 ASC; sessions where the exercise has 0 non-warmup sets are skipped). Top set = set with
 highest e1rm (first set wins ties). Volume = sum of `weight_kg * reps` over the
@@ -362,7 +362,7 @@ top e1rms (first qualifying session always emits one).
 ```
 200 · 422 malformed UUID
 
-### GET /api/stats/strength-levels — `api_stats_strength_levels`
+### GET /api/stats/strength-levels - `api_stats_strength_levels`
 Requires a bodyweight measurement and profile sex.
 - No `weight` measurement → `{"ready": false, "reason": "no-bodyweight", "levels": []}`
 - No profile sex → `{"ready": false, "reason": "no-profile", "levels": []}`
@@ -391,7 +391,7 @@ Requires a bodyweight measurement and profile sex.
 Levels: `untrained` (below beginner), `beginner`, `novice`, `intermediate`, `advanced`,
 `elite`. 200 always.
 
-### GET /api/stats/weekly-muscles — `api_stats_weekly_muscles`
+### GET /api/stats/weekly-muscles - `api_stats_weekly_muscles`
 Finished sessions started within the last 7 days (rolling window from now); only session
 exercises with at least one non-warmup set count. Muscles unioned; `primary` wins over
 `secondary`. `session_count` = distinct qualifying sessions.
@@ -400,7 +400,7 @@ exercises with at least one non-warmup set count. Muscles unioned; `primary` win
 ```
 200
 
-### GET /api/stats/overview?period=7d — `api_stats_overview`
+### GET /api/stats/overview?period=7d - `api_stats_overview`
 `period` ∈ `7d`, `30d`, `90d`, `365d`, `all`; anything else silently falls back to `7d`.
 Current window = last N days from now; previous window = the N days before that
 (null for `all`). Totals over finished sessions started in the window:

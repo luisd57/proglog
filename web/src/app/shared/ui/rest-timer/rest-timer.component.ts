@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, OnDestroy, effect, input, signal } 
 
 /**
  * A request to run the timer. `nonce` distinguishes two requests for the same
- * duration — without it, resting 90s twice in a row would not restart the
+ * duration - without it, resting 90s twice in a row would not restart the
  * countdown, because the input signal would not report a change.
  */
 export interface RestRequest {
@@ -128,7 +128,7 @@ export class RestTimerComponent implements OnDestroy {
       osc.stop(ctx.currentTime + 0.6);
       osc.onended = () => void ctx.close();
     } catch {
-      // no audio available (e.g. tests) — timer still works silently
+      // no audio available (e.g. tests) - timer still works silently
     }
   }
 }
