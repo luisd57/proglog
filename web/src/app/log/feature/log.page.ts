@@ -46,7 +46,7 @@ import { SessionExerciseCardComponent } from '../ui/session-exercise-card.compon
       <h2>Add exercise</h2>
       <input
         type="search"
-        placeholder="Search exercises…"
+        placeholder="Search exercises..."
         [value]="search()"
         (input)="search.set($any($event.target).value)"
       />

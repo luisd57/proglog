@@ -1,6 +1,6 @@
 # ProgLog
 
-Personal strength training tracker — workout splits, session logging, progressive overload stats, strength levels, and body measurements. Single user, self-hosted, everything in Docker.
+Personal strength training tracker - workout splits, session logging, progressive overload stats, strength levels, and body measurements. Single user, self-hosted, everything in Docker.
 
 Symfony 8 (PHP 8.4, hexagonal) + Postgres 16 + Angular 22. No auth by design: it runs on a private network.
 
@@ -8,7 +8,7 @@ Symfony 8 (PHP 8.4, hexagonal) + Postgres 16 + Angular 22. No auth by design: it
 
 ```sh
 make build up                 # nginx :8080 (API), Angular dev server :4200, Postgres
-make composer c=install       # first time only — creates API/vendor/
+make composer c=install       # first time only - creates API/vendor/
 make db-create db-migrate
 make seed                     # 873-exercise catalog, idempotent
 ```
@@ -17,7 +17,7 @@ make seed                     # 873-exercise catalog, idempotent
 
 ```sh
 make test-db-setup            # first time only
-make test                     # PHPUnit — also test-unit / test-integration
+make test                     # PHPUnit - also test-unit / test-integration
 docker compose run --rm web npm test    # Angular (Vitest)
 ```
 

@@ -29,7 +29,7 @@ export class MeasurementsService {
   }
 
   remove(id: string): Observable<void> {
-    // 204 No Content — no envelope
+    // 204 No Content - no envelope
     return this.http.delete<void>(`/api/measurements/${id}`);
   }
 

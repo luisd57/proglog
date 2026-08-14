@@ -35,7 +35,7 @@ export class TemplatesService {
       .pipe(map((response) => this.unwrap(response).template));
   }
   remove(id: string): Observable<void> {
-    // 204 No Content — no envelope
+    // 204 No Content - no envelope
     return this.http.delete<void>(`/api/templates/${id}`);
   }
   private unwrap<T>(response: ApiResponse<T>): T {

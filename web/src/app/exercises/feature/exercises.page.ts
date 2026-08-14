@@ -17,7 +17,7 @@ import { ExercisesService } from '../../shared/data-access/exercises.service';
     <div class="filters">
       <input
         type="search"
-        placeholder="Search…"
+        placeholder="Search..."
         [value]="search()"
         (input)="search.set($any($event.target).value)"
       />
@@ -68,7 +68,7 @@ import { ExercisesService } from '../../shared/data-access/exercises.service';
     } @else if (exercises.error()) {
       <p class="error">Could not load exercises.</p>
     } @else {
-      <p class="count">Loading…</p>
+      <p class="count">Loading...</p>
     }
   `,
   styles: `

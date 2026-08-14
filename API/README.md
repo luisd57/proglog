@@ -5,7 +5,7 @@ Postgres 16 via Doctrine. Contract: `../docs/api-contract.md`.
 
 ## Deliberate deviations from the kit
 
-- No auth (no JWT, users, security bundle, rate limiting) — single-user LAN tool.
+- No auth (no JWT, users, security bundle, rate limiting) - single-user LAN tool.
 - No Redis, no mailer/MailHog, no cron container, no CORS bundle (Angular dev server
   proxies `/api`; prod is same-origin).
 
@@ -34,7 +34,7 @@ Suites: `Unit` (no DB) and `Integration` (transaction-rollback isolation via
 
 ## Structure
 
-- `src/Domain/<X>/{Entity,Id,Repository,Exception}` — pure business logic, no framework
-- `src/Application/<X>/{Handler,DTO/Input,DTO/Output}` — one handler per use case
-- `src/Infrastructure/{Http,Persistence/Doctrine,Console}` — adapters
+- `src/Domain/<X>/{Entity,Id,Repository,Exception}` - pure business logic, no framework
+- `src/Application/<X>/{Handler,DTO/Input,DTO/Output}` - one handler per use case
+- `src/Infrastructure/{Http,Persistence/Doctrine,Console}` - adapters
 - Exercise is the complete reference slice; imitate it for Template/Session/Measurement/Profile/Stats.
