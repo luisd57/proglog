@@ -4,10 +4,12 @@ When writing or updating CLAUDE.md, .claude/rules/ files, or any project documen
 - Be terse. Imperative sentences, not explanations.
 - No code examples unless the pattern is non-obvious and can't be inferred from existing code.
 - No verbose introductions or summaries.
-- Rules files: 40-80 lines max. If longer, you're over-explaining.
-- CLAUDE.md: under 100 lines. Operating manual, not a tutorial.
+- Write for a human skimming the file, not for completeness. If a section is long enough that
+  the reader would skip it, it is too long - cut it or move it out.
+- CLAUDE.md is an operating manual, not a tutorial. Every line earns its place by being something
+  an agent would otherwise get wrong.
 - Never duplicate information already discoverable in the codebase.
-- Never add checklists with 10+ items - only the 3-4 rules Claude would actually get wrong.
+- No long checklists - only the handful of rules Claude would actually get wrong.
 
 ## Where things go
 

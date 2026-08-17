@@ -1,19 +1,25 @@
-Deliver what was asked, at the scope intended. Make routine judgment calls yourself, and check
-in only when different readings of the request would lead to materially different work. If the
-request seems mistaken or a better approach exists, say so in a sentence and continue with the
-task as asked rather than quietly narrowing or widening it.
-
-Keep responses focused and brief, and lead with the outcome. Match written documents to what
-the task needs - no filler sections or redundant summaries.
-
 Delegate to a subagent only for large, genuinely independent investigations. Don't delegate work
 you can finish in a handful of tool calls, and don't use subagents to double-check your own work.
 
-## Process Skills (Superpowers)
+## Process Skills
 
-Brainstorming, TDD, and systematic debugging come from the Superpowers plugin - invoke those
-skills; do NOT restate their guidance here. Keep this file and `.claude/rules/` focused on
-project facts and conventions Superpowers doesn't cover.
+All from the **mattpocock-skills** plugin. Invoke them; do NOT restate their guidance here.
+
+| Situation | Skill |
+|---|---|
+| Idea too big for one session, route unclear | `wayfinder` |
+| Plan or decision that needs stress-testing | `grilling` |
+| Conversation has settled, needs writing up | `to-spec`, then `to-tickets` |
+| Question dialogue can't answer | `prototype` |
+| Implementing anything | `tdd` |
+| Something broken, throwing, or slow | `diagnosing-bugs` |
+| Before opening a PR | `code-review` |
+| Terminology or an ADR | `domain-modeling` |
+
+`to-spec`, `to-tickets` and `wayfinder` are user-invocable only. Ask for them rather than writing
+a spec or ticket by hand.
+
+Keep this file and `.claude/rules/` focused on project facts the plugin doesn't cover.
 
 # ProgLog
 
