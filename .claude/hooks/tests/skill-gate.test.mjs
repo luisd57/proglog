@@ -92,7 +92,7 @@ const tddAfterPr = fixture('tdd-after-pr.jsonl', [
 ]);
 
 // A busy session, standing in for the live transcript three cases used to read. The
-// short fixtures above prove each rule; this one proves the rules still hold when the
+// short fixtures above prove each rule. This one proves they still hold when the
 // markers are buried in traffic, which is the only thing the real transcript added.
 //
 // It needs two PRs, not one. PreToolUse fires with the call under judgement already in
