@@ -10,5 +10,50 @@
       "Bash(gh pr view:*)",
       "Bash(gh pr list:*)"
     ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/skill-gate.mjs",
+            "timeout": 10,
+            "statusMessage": "Checking skill provenance"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/ticket-duplicate.mjs",
+            "timeout": 10,
+            "statusMessage": "Checking the tracker for a duplicate"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/tracker-match.mjs",
+            "timeout": 10,
+            "statusMessage": "Checking the issue tracker"
+          },
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/post-merge-nudge.mjs",
+            "timeout": 10,
+            "statusMessage": "Checking for a merged PR"
+          }
+        ]
+      }
+    ]
   }
 }
