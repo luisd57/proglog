@@ -1,0 +1,8 @@
+{
+  "name": "claude-hooks",
+  "private": true,
+  "description": "Claude Code hooks for this project. No dependencies, builtins only. The hooks run on Node 18+; the tests need 20.11+ for import.meta.dirname.",
+  "scripts": {
+    "test": "node tests/shell.test.mjs && node tests/skill-gate.test.mjs && node tests/ticket-duplicate.test.mjs && node tests/tracker-match.test.mjs && node tests/post-merge-nudge.test.mjs"
+  }
+}
