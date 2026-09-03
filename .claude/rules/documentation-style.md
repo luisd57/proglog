@@ -16,4 +16,7 @@ When writing or updating CLAUDE.md, .claude/rules/ files, or any project documen
 - CLAUDE.md loads every session - keep frequently-changing content (status, dates, counts) out of it. That belongs in `docs/STATUS.md`.
 - Growing CLAUDE.md is the wrong move. Add a `paths:`-scoped rule in `.claude/rules/` so it loads only for matching files.
 - Multi-step workflows go in `.claude/skills/`, not in a rules file - skills load on demand.
+- A convention worth enforcing rather than only stating goes in `.claude/hooks/`, registered in `.claude/settings.json`. Hooks fail open, so one never replaces the rule that says why. Run `npm test` in that directory after changing one; nothing else does.
+- The hooks come from the `symfony-angular-starter-rules` kit and that copy is canonical. A fix belongs there first, then here. `SOURCE_DIRS` in `skill-gate.mjs` is the exception, meant to be trimmed to this repo's deployables.
+- `ticket-duplicate` and `tracker-match` read a `.scratch/` tracker this repo does not have yet, so both sit dormant and start working the day one appears.
 - State the reason behind a non-obvious convention. A rule with a reason survives; a bare prohibition gets "helpfully" undone.
